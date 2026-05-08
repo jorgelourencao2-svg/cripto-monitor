@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cripto Monitor · Top 50</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0d12;--surface:#111520;--surface2:#181e2e;--border:#1e2740;
+  --text:#e8ecf4;--muted:#6b7a99;--dim:#3a4460;
+  --green:#00d97e;--red:#ff4d6d;--yellow:#f4b942;--blue:#4d9fff;--purple:#a78bfa;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px}
+
+.header{padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;background:var(--bg);z-index:20}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--blue);letter-spacing:0.05em}
+.tagline{font-size:11px;color:var(--muted);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.status-area{display:flex;align-items:center;gap:6px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.status-txt{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.ws-indicator{display:flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid var(--border);border-radius:3px}
+.ws-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.ws-dot.live{background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,217,126,0.4)}50%{box-shadow:0 0 0 4px rgba(0,217,126,0)}}
+.ws-label{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.countdown{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--dim);min-width:70px}
+.btn{font-size:11px;padding:5px 12px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'IBM Plex Mono',monospace;border-radius:4px;transition:all 0.15s}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+
+.progress-bar{height:2px;background:var(--surface2);overflow:hidden}
+.progress-fill{height:100%;background:var(--blue);transition:width 1s linear}
+
+.market-bar{display:flex;gap:8px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.mbar-item{display:flex;flex-direction:column;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;flex:1;min-width:90px}
+.mbar-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em}
+.mbar-val{font-size:13px;font-weight:500;font-family:'IBM Plex Mono',monospace}
+.up{color:var(--green)}.dn{color:var(--red)}.neu{color:var(--yellow)}
+
+.tab-nav{display:flex;border-bottom:1px solid var(--border);padding:0 20px;background:var(--bg)}
+.tab-btn{font-size:12px;padding:9px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:all 0.15s;margin-bottom:-1px}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-btn:hover:not(.active){color:var(--text)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+.controls{padding:10px 20px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border);align-items:center}
+.seg-btn{font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;border-radius:3px;font-family:'IBM Plex Mono',monospace;transition:all 0.15s}
+.seg-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.seg-btn:hover:not(.active){border-color:var(--blue);color:var(--blue)}
+.search-wrap{margin-left:auto}
+#search-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 10px;font-size:12px;border-radius:3px;font-family:'IBM Plex Mono',monospace;width:140px}
+#search-input::placeholder{color:var(--dim)}
+#search-input:focus{outline:none;border-color:var(--blue)}
+
+.pillar-legend{padding:8px 20px;display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--border);align-items:center}
+.pleg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.pleg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pleg-note{margin-left:auto;font-size:10px;color:var(--dim)}
+
+#table-container{overflow-y:auto;overflow-x:hidden}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1060px}
+th{padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);font-weight:400;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--border)}
+th:hover{color:var(--blue)}
+thead tr{background:var(--surface)}
+tbody tr{border-bottom:1px solid #13182a;cursor:pointer;transition:background 0.1s}
+tbody tr:hover{background:var(--surface)}
+tbody tr.open-row{background:var(--surface2)}
+td{padding:9px 10px;font-size:12px;vertical-align:middle;white-space:nowrap}
+
+.rank-cell{color:var(--dim);font-family:'IBM Plex Mono',monospace;font-size:11px;width:32px}
+.name-cell{display:flex;align-items:center;gap:8px}
+.coin-icon{width:24px;height:24px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:var(--blue);flex-shrink:0;border:1px solid var(--border)}
+.coin-ticker{font-weight:500;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.coin-name-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.price-cell{font-family:'IBM Plex Mono',monospace;font-size:12px}
+.chg-cell{font-family:'IBM Plex Mono',monospace;font-size:11px}
+.ath-cell{font-family:'IBM Plex Mono',monospace;font-size:11px}
+.seg-tag{font-size:10px;padding:2px 7px;border-radius:2px;background:var(--surface2);border:1px solid var(--border)}
+
+@keyframes flash-up{0%{background:rgba(0,217,126,0.25)}100%{background:transparent}}
+@keyframes flash-dn{0%{background:rgba(255,77,109,0.25)}100%{background:transparent}}
+.flash-up{animation:flash-up 0.8s ease-out}
+.flash-dn{animation:flash-dn 0.8s ease-out}
+
+.score-wrap{display:flex;align-items:center;gap:6px}
+.score-num{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;min-width:28px;text-align:right}
+.score-bar-track{width:50px;height:4px;background:var(--dim);border-radius:2px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:2px;transition:width 0.6s}
+
+.signal-badge{font-size:10px;padding:3px 9px;border-radius:2px;font-weight:500;font-family:'IBM Plex Mono',monospace;letter-spacing:0.04em}
+.sig-comprar{background:rgba(0,217,126,0.12);color:var(--green);border:1px solid rgba(0,217,126,0.3);animation:glow-g 3s ease-in-out infinite}
+.sig-aguardar{background:rgba(244,185,66,0.1);color:var(--yellow);border:1px solid rgba(244,185,66,0.25)}
+.sig-cautela{background:rgba(107,122,153,0.1);color:var(--muted);border:1px solid var(--border)}
+.sig-evitar{background:rgba(255,77,109,0.1);color:var(--red);border:1px solid rgba(255,77,109,0.3)}
+@keyframes glow-g{0%,100%{box-shadow:none}50%{box-shadow:0 0 8px rgba(0,217,126,0.35)}}
+
+.detail-row td{padding:0}
+.detail-inner{padding:16px 20px;background:#0d1120;border-top:1px solid var(--border)}
+.detail-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.detail-meta{font-size:11px;color:var(--muted);margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
+.detail-pilar{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:11px 13px}
+.dp-title{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.dp-score{font-size:22px;font-weight:500;font-family:'IBM Plex Mono',monospace;margin-bottom:3px}
+.dp-bar{height:3px;border-radius:2px;margin-bottom:6px}
+.dp-why{font-size:11px;color:var(--muted);line-height:1.5}
+.interp-box{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;font-size:12px;color:var(--text);line-height:1.7}
+.interp-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:5px}
+
+/* WALLET */
+.wallet-container{padding:20px}
+.wallet-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px}
+.sc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px}
+.sc-value{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500}
+.wallet-form-wrap{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 20px;margin-bottom:20px}
+.wf-title{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--blue);margin-bottom:12px;letter-spacing:0.06em;text-transform:uppercase}
+.wallet-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.wf-group{display:flex;flex-direction:column;gap:4px}
+.wf-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em}
+.wf-input,.wf-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;font-size:12px;border-radius:3px;font-family:'IBM Plex Mono',monospace}
+.wf-input{min-width:120px}
+.wf-select{min-width:170px;cursor:pointer}
+.wf-input:focus,.wf-select:focus{outline:none;border-color:var(--blue)}
+.wf-sep{width:100%;height:0;border-top:1px solid var(--border);margin:4px 0}
+.btn-add{font-size:12px;padding:6px 18px;background:var(--blue);border:none;color:#fff;cursor:pointer;font-family:'IBM Plex Mono',monospace;border-radius:3px;transition:opacity 0.15s;align-self:flex-end}
+.btn-add:hover{opacity:0.85}
+.positions-wrap{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 20px}
+.positions-title{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px}
+.wallet-table-wrap{overflow-x:auto}
+.wtable{width:100%;border-collapse:collapse;min-width:820px}
+.wtable thead tr{background:var(--surface2);border-bottom:1px solid var(--border)}
+.wtable th{padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);font-weight:400;white-space:nowrap;position:static;background:var(--surface2)}
+.wtable tbody tr{border-bottom:1px solid #13182a;transition:background 0.1s}
+.wtable tbody tr:hover{background:var(--surface2)}
+.wtable td{padding:10px 12px;font-size:12px;vertical-align:middle;white-space:nowrap;font-family:'IBM Plex Mono',monospace}
+.wallet-empty{padding:40px;text-align:center;color:var(--muted);font-size:12px;font-family:'IBM Plex Mono',monospace}
+.btn-remove{background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;padding:3px 8px;font-size:10px;border-radius:3px;font-family:'IBM Plex Mono',monospace;transition:all 0.15s}
+.btn-remove:hover{border-color:var(--red);color:var(--red)}
+.btn-chart{background:transparent;border:1px solid var(--border);color:var(--blue);cursor:pointer;padding:3px 8px;font-size:10px;border-radius:3px;font-family:'IBM Plex Mono',monospace;transition:all 0.15s}
+.btn-chart:hover{border-color:var(--blue);background:rgba(77,159,255,0.08)}
+.pnl-pos{color:var(--green)}
+.pnl-neg{color:var(--red)}
+.pnl-neu{color:var(--muted)}
+.badge-open{font-size:9px;padding:2px 6px;border-radius:2px;background:rgba(0,217,126,0.1);color:var(--green);border:1px solid rgba(0,217,126,0.25)}
+.badge-closed{font-size:9px;padding:2px 6px;border-radius:2px;background:rgba(107,122,153,0.1);color:var(--muted);border:1px solid var(--border)}
+.chart-row td{padding:0}
+.chart-inner{padding:0 12px 16px;background:#0d1120;border-bottom:1px solid var(--border)}
+
+/* COIN POPUP */
+#coin-popup{position:fixed;z-index:999;width:340px;max-width:calc(100vw - 20px);background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,0.5);padding:14px 16px;pointer-events:none;display:none;font-size:12px}
+.cp-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.cp-icon{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--blue);flex-shrink:0}
+.cp-ticker{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--blue)}
+.cp-name{font-size:11px;color:var(--muted);margin-top:1px}
+.cp-section{margin-bottom:8px}
+.cp-label{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);margin-bottom:3px}
+.cp-val{font-size:11px;color:var(--text);line-height:1.55}
+.cp-market{background:var(--surface2);border-left:2px solid var(--blue);padding:7px 9px;margin-top:8px;border-radius:0 4px 4px 0}
+.cp-market .cp-label{color:var(--blue)}
+.cp-market .cp-val{color:var(--muted)}
+
+.loading-state{padding:60px 20px;text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px}
+.spin{display:inline-block;animation:spin 1s linear infinite;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer{padding:10px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px}
+.footer-note{font-size:10px;color:var(--dim)}
+.footer-src{font-size:10px;color:var(--dim)}
+
+@media(max-width:768px){
+  .col-ath,.col-spark,.col-chg24d,.col-200d,.col-1y{display:none}
+  .wallet-form{flex-direction:column}
+  .wf-input,.wf-select{width:100%;min-width:unset}
+}
+@media(max-width:600px){
+  .controls{gap:5px}
+  .seg-btn{font-size:10px;padding:3px 7px}
+  .search-wrap{margin-left:0;width:100%}
+  #search-input{width:100%}
+  .wallet-container{padding:12px}
+  .market-bar{gap:6px;padding:8px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">◈ CRIPTO MONITOR</div>
+    <div class="tagline">Top 50 · Swing Trade · Preços em tempo real</div>
+  </div>
+  <div class="header-right">
+    <div class="ws-indicator">
+      <div class="ws-dot" id="ws-dot"></div>
+      <span class="ws-label" id="ws-label">WS —</span>
+    </div>
+    <div class="status-area">
+      <div class="status-dot" id="status-dot"></div>
+      <span class="status-txt" id="status-txt">Carregando...</span>
+    </div>
+    <span class="countdown" id="countdown"></span>
+    <button class="btn" onclick="loadData()">↻ Atualizar</button>
+  </div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:100%"></div></div>
+
+<div class="market-bar">
+  <div class="mbar-item"><div class="mbar-label">Market Cap Total</div><div class="mbar-val neu" id="mb-cap">—</div></div>
+  <div class="mbar-item"><div class="mbar-label">Volume 24h</div><div class="mbar-val neu" id="mb-vol">—</div></div>
+  <div class="mbar-item"><div class="mbar-label">Dominância BTC</div><div class="mbar-val neu" id="mb-btc">—</div></div>
+  <div class="mbar-item"><div class="mbar-label">Dominância ETH</div><div class="mbar-val neu" id="mb-eth">—</div></div>
+  <div class="mbar-item"><div class="mbar-label">Última atualização</div><div class="mbar-val neu" id="mb-time">—</div></div>
+  <div class="mbar-item"><div class="mbar-label">Próxima em</div><div class="mbar-val neu" id="mb-next">1:00</div></div>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('monitor',this)">◈ Monitor</button>
+  <button class="tab-btn" onclick="switchTab('wallet',this)">◈ Carteira</button>
+</div>
+
+<div id="tab-monitor" class="tab-pane active">
+  <div class="controls">
+    <button class="seg-btn active" onclick="filterSeg('Todos',this)">Todos</button>
+    <button class="seg-btn" onclick="filterSeg('Reserva de Valor',this)">Reserva Valor</button>
+    <button class="seg-btn" onclick="filterSeg('Smart Contract / L1',this)">Smart L1</button>
+    <button class="seg-btn" onclick="filterSeg('Stablecoin',this)">Stablecoins</button>
+    <button class="seg-btn" onclick="filterSeg('Pagamentos / Cross-border',this)">Pagamentos</button>
+    <button class="seg-btn" onclick="filterSeg('DeFi',this)">DeFi</button>
+    <button class="seg-btn" onclick="filterSeg('Layer 2 / Escalabilidade',this)">Layer 2</button>
+    <button class="seg-btn" onclick="filterSeg('RWA / Tokenização',this)">RWA</button>
+    <button class="seg-btn" onclick="filterSeg('Meme Coin',this)">Meme</button>
+    <button class="seg-btn" onclick="filterSeg('AI / Computação Web3',this)">AI/Web3</button>
+    <button class="seg-btn" onclick="filterSeg('Infraestrutura / Oracle',this)">Oracle</button>
+    <div class="search-wrap"><input id="search-input" placeholder="Buscar ticker..." oninput="renderTable()"></div>
+  </div>
+  <div class="pillar-legend">
+    <span class="pleg"><span class="pleg-dot" style="background:#4d9fff"></span>Adoção</span>
+    <span class="pleg"><span class="pleg-dot" style="background:#a78bfa"></span>Tecnologia</span>
+    <span class="pleg"><span class="pleg-dot" style="background:#f4b942"></span>Liquidez</span>
+    <span class="pleg"><span class="pleg-dot" style="background:#00d97e"></span>Momentum</span>
+    <span class="pleg"><span class="pleg-dot" style="background:#ff6b9d"></span>Risco/Reg.</span>
+    <span class="pleg-note">Score 0–100 · Perfil moderado · Swing trade semanas/meses</span>
+  </div>
+  <div id="table-container">
+    <div class="loading-state"><span class="spin">⟳</span>Buscando dados ao vivo...</div>
+  </div>
+</div>
+
+<div id="tab-wallet" class="tab-pane">
+  <div class="wallet-container">
+    <div class="wallet-summary">
+      <div class="summary-card"><div class="sc-label">Total Investido</div><div class="sc-value pnl-neu" id="ws-invested">$0.00</div></div>
+      <div class="summary-card"><div class="sc-label">Valor Atual</div><div class="sc-value pnl-neu" id="ws-current">$0.00</div></div>
+      <div class="summary-card"><div class="sc-label">P&amp;L Total $</div><div class="sc-value pnl-neu" id="ws-pnl-d">$0.00</div></div>
+      <div class="summary-card"><div class="sc-label">P&amp;L Total %</div><div class="sc-value pnl-neu" id="ws-pnl-p">0.00%</div></div>
+      <div class="summary-card"><div class="sc-label">Realizado $</div><div class="sc-value pnl-neu" id="ws-realized">$0.00</div></div>
+      <div class="summary-card"><div class="sc-label">Posições</div><div class="sc-value neu" id="ws-count">0</div></div>
+    </div>
+
+    <div class="wallet-form-wrap">
+      <div class="wf-title">+ Nova Posição Simulada</div>
+      <div class="wallet-form">
+        <div class="wf-group">
+          <span class="wf-label">Moeda</span>
+          <select class="wf-select" id="wf-coin"></select>
+        </div>
+        <div class="wf-group">
+          <span class="wf-label">Quantidade</span>
+          <input class="wf-input" id="wf-qty" type="number" placeholder="ex: 0.5" min="0" step="any">
+        </div>
+        <div class="wf-group">
+          <span class="wf-label">Preço Entrada (USD)</span>
+          <input class="wf-input" id="wf-price" type="number" placeholder="Atual" min="0" step="any">
+        </div>
+        <div class="wf-group">
+          <span class="wf-label">Data Entrada</span>
+          <input class="wf-input" id="wf-date" type="date">
+        </div>
+        <div class="wf-sep"></div>
+        <div class="wf-group">
+          <span class="wf-label">Preço Saída (opcional)</span>
+          <input class="wf-input" id="wf-exit-price" type="number" placeholder="Deixe vazio = aberta" min="0" step="any">
+        </div>
+        <div class="wf-group">
+          <span class="wf-label">Data Saída (opcional)</span>
+          <input class="wf-input" id="wf-exit-date" type="date">
+        </div>
+        <div class="wf-group">
+          <span class="wf-label">Nota</span>
+          <input class="wf-input" id="wf-note" type="text" placeholder="ex: suporte testado">
+        </div>
+        <button class="btn-add" onclick="addPosition()">Adicionar</button>
+      </div>
+    </div>
+
+    <div class="positions-wrap">
+      <div class="positions-title">Posições</div>
+      <div id="wallet-positions"><div class="wallet-empty">Nenhuma posição ainda.</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="coin-popup"></div>
+
+<div class="footer">
+  <span class="footer-note">⚠ Não é recomendação de investimento. Use como referência analítica.</span>
+  <span class="footer-src">Fonte: CoinGecko · Preços: Binance WS · Refresh: 60s</span>
+</div>
+
+<script>
+const COINS_DEF=[
+  {rank:1,ticker:"BTC",name:"Bitcoin",seg:"Reserva de Valor",id:"bitcoin",tech:72,reg:65},
+  {rank:2,ticker:"ETH",name:"Ethereum",seg:"Smart Contract / L1",id:"ethereum",tech:88,reg:72},
+  {rank:3,ticker:"USDT",name:"Tether",seg:"Stablecoin",id:"tether",tech:55,reg:60},
+  {rank:4,ticker:"BNB",name:"BNB",seg:"Smart Contract / L1",id:"binancecoin",tech:75,reg:55},
+  {rank:5,ticker:"USDC",name:"USD Coin",seg:"Stablecoin",id:"usd-coin",tech:58,reg:85},
+  {rank:6,ticker:"XRP",name:"XRP",seg:"Pagamentos / Cross-border",id:"ripple",tech:70,reg:65},
+  {rank:7,ticker:"SOL",name:"Solana",seg:"Smart Contract / L1",id:"solana",tech:90,reg:68},
+  {rank:8,ticker:"DOGE",name:"Dogecoin",seg:"Meme Coin",id:"dogecoin",tech:30,reg:50},
+  {rank:9,ticker:"TRX",name:"TRON",seg:"Pagamentos / Cross-border",id:"tron",tech:65,reg:45},
+  {rank:10,ticker:"ADA",name:"Cardano",seg:"Smart Contract / L1",id:"cardano",tech:78,reg:70},
+  {rank:11,ticker:"TON",name:"Toncoin",seg:"Smart Contract / L1",id:"the-open-network",tech:72,reg:55},
+  {rank:12,ticker:"AVAX",name:"Avalanche",seg:"Smart Contract / L1",id:"avalanche-2",tech:82,reg:65},
+  {rank:13,ticker:"SHIB",name:"Shiba Inu",seg:"Meme Coin",id:"shiba-inu",tech:28,reg:40},
+  {rank:14,ticker:"LINK",name:"Chainlink",seg:"Infraestrutura / Oracle",id:"chainlink",tech:85,reg:72},
+  {rank:15,ticker:"DOT",name:"Polkadot",seg:"Smart Contract / L1",id:"polkadot",tech:80,reg:68},
+  {rank:16,ticker:"BCH",name:"Bitcoin Cash",seg:"Pagamentos / Cross-border",id:"bitcoin-cash",tech:50,reg:62},
+  {rank:17,ticker:"SUI",name:"Sui",seg:"Smart Contract / L1",id:"sui",tech:86,reg:60},
+  {rank:18,ticker:"NEAR",name:"NEAR Protocol",seg:"Smart Contract / L1",id:"near",tech:83,reg:65},
+  {rank:19,ticker:"LTC",name:"Litecoin",seg:"Pagamentos / Cross-border",id:"litecoin",tech:48,reg:65},
+  {rank:20,ticker:"UNI",name:"Uniswap",seg:"DeFi",id:"uniswap",tech:82,reg:58},
+  {rank:21,ticker:"DAI",name:"Dai",seg:"Stablecoin",id:"dai",tech:75,reg:62},
+  {rank:22,ticker:"HBAR",name:"Hedera",seg:"Infraestrutura / Oracle",id:"hedera-hashgraph",tech:78,reg:80},
+  {rank:23,ticker:"APT",name:"Aptos",seg:"Smart Contract / L1",id:"aptos",tech:84,reg:62},
+  {rank:24,ticker:"ATOM",name:"Cosmos",seg:"Infraestrutura / Oracle",id:"cosmos",tech:80,reg:65},
+  {rank:25,ticker:"ARB",name:"Arbitrum",seg:"Layer 2 / Escalabilidade",id:"arbitrum",tech:85,reg:60},
+  {rank:26,ticker:"OP",name:"Optimism",seg:"Layer 2 / Escalabilidade",id:"optimism",tech:83,reg:62},
+  {rank:27,ticker:"ONDO",name:"Ondo Finance",seg:"RWA / Tokenização",id:"ondo-finance",tech:76,reg:78},
+  {rank:28,ticker:"MNT",name:"Mantle",seg:"Layer 2 / Escalabilidade",id:"mantle",tech:78,reg:58},
+  {rank:29,ticker:"VET",name:"VeChain",seg:"Infraestrutura / Oracle",id:"vechain",tech:72,reg:75},
+  {rank:30,ticker:"XLM",name:"Stellar",seg:"Pagamentos / Cross-border",id:"stellar",tech:68,reg:72},
+  {rank:31,ticker:"FIL",name:"Filecoin",seg:"AI / Computação Web3",id:"filecoin",tech:80,reg:62},
+  {rank:32,ticker:"ICP",name:"Internet Computer",seg:"AI / Computação Web3",id:"internet-computer",tech:82,reg:58},
+  {rank:33,ticker:"AAVE",name:"Aave",seg:"DeFi",id:"aave",tech:85,reg:62},
+  {rank:34,ticker:"CRO",name:"Cronos",seg:"Smart Contract / L1",id:"crypto-com-chain",tech:68,reg:72},
+  {rank:35,ticker:"RENDER",name:"Render",seg:"AI / Computação Web3",id:"render-token",tech:78,reg:60},
+  {rank:36,ticker:"GRT",name:"The Graph",seg:"Infraestrutura / Oracle",id:"the-graph",tech:80,reg:65},
+  {rank:37,ticker:"ALGO",name:"Algorand",seg:"Smart Contract / L1",id:"algorand",tech:76,reg:75},
+  {rank:38,ticker:"STX",name:"Stacks",seg:"Layer 2 / Escalabilidade",id:"blockstack",tech:75,reg:62},
+  {rank:39,ticker:"THETA",name:"Theta Network",seg:"AI / Computação Web3",id:"theta-token",tech:74,reg:62},
+  {rank:40,ticker:"PEPE",name:"Pepe",seg:"Meme Coin",id:"pepe",tech:20,reg:35},
+  {rank:41,ticker:"ENA",name:"Ethena",seg:"DeFi",id:"ethena",tech:78,reg:55},
+  {rank:42,ticker:"FLOKI",name:"Floki",seg:"Meme Coin",id:"floki",tech:25,reg:38},
+  {rank:43,ticker:"BONK",name:"Bonk",seg:"Meme Coin",id:"bonk",tech:22,reg:35},
+  {rank:44,ticker:"VIRTUAL",name:"Virtuals Protocol",seg:"AI / Computação Web3",id:"virtual-protocol",tech:72,reg:45},
+  {rank:45,ticker:"MKR",name:"Maker",seg:"DeFi",id:"maker",tech:82,reg:65},
+  {rank:46,ticker:"JTO",name:"Jito",seg:"DeFi",id:"jito-governance-token",tech:75,reg:55},
+  {rank:47,ticker:"CFG",name:"Centrifuge",seg:"RWA / Tokenização",id:"centrifuge",tech:74,reg:80},
+  {rank:48,ticker:"WIF",name:"dogwifhat",seg:"Meme Coin",id:"dogwifhat",tech:18,reg:32},
+  {rank:49,ticker:"MANTRA",name:"MANTRA",seg:"RWA / Tokenização",id:"mantra-dao",tech:72,reg:75},
+  {rank:50,ticker:"WBT",name:"WhiteBIT Coin",seg:"Infraestrutura / Oracle",id:"whitebit",tech:60,reg:55},
+];
+
+const SEG_COLORS={
+  "Reserva de Valor":"#f4b942","Smart Contract / L1":"#4d9fff","Stablecoin":"#00d97e",
+  "Pagamentos / Cross-border":"#a78bfa","DeFi":"#ff6b9d","Layer 2 / Escalabilidade":"#06d6c7",
+  "RWA / Tokenização":"#ff8c42","Meme Coin":"#ff4d6d","AI / Computação Web3":"#9b59f0",
+  "Infraestrutura / Oracle":"#8892aa"
+};
+
+const BINANCE_MAP={
+  BTC:'btcusdt',ETH:'ethusdt',BNB:'bnbusdt',XRP:'xrpusdt',SOL:'solusdt',
+  DOGE:'dogeusdt',TRX:'trxusdt',ADA:'adausdt',TON:'tonusdt',AVAX:'avaxusdt',
+  SHIB:'shibusdt',LINK:'linkusdt',DOT:'dotusdt',BCH:'bchusdt',SUI:'suiusdt',
+  NEAR:'nearusdt',LTC:'ltcusdt',UNI:'uniusdt',HBAR:'hbarusdt',APT:'aptusdt',
+  ATOM:'atomusdt',ARB:'arbusdt',OP:'opusdt',ONDO:'ondousdt',MNT:'mntusdt',
+  VET:'vetusdt',XLM:'xlmusdt',FIL:'filusdt',ICP:'icpusdt',AAVE:'aaveusdt',
+  CRO:'crousdt',RENDER:'renderusdt',GRT:'grtusdt',ALGO:'algousdt',STX:'stxusdt',
+  THETA:'thetausdt',PEPE:'pepeusdt',ENA:'enausdt',FLOKI:'flokiusdt',BONK:'bonkusdt',
+  VIRTUAL:'virtualusdt',MKR:'mkrusdt',JTO:'jtousdt',WIF:'wifusdt',
+};
+const SYM_TO_TICKER={};
+Object.entries(BINANCE_MAP).forEach(([t,s])=>SYM_TO_TICKER[s.toUpperCase()]=t);
+
+const REFRESH_INTERVAL=60;
+let allCoins=[];
+let currentFilter='Todos';
+let openDetail=null;
+let sortKey='score';
+let sortAsc=false;
+let countdown=REFRESH_INTERVAL;
+let countdownTimer=null;
+let currentTab='monitor';
+let binanceWs=null;
+let wsReconnectTimer=null;
+let openCharts=new Set();
+let walletPositions=JSON.parse(localStorage.getItem('cm-wallet')||'[]');
+
+// ── COIN INFO DATABASE ──
+const COIN_INFO={
+  BTC:{desc:"Primeira criptomoeda do mundo. Sistema de pagamento peer-to-peer sem intermediários. Base de toda a indústria cripto.",founders:"Satoshi Nakamoto (identidade anônima/desconhecida)",launched:"Janeiro de 2009",backers:"Descentralizado. Dev core: Bitcoin Core contributors. Institucional: MicroStrategy, BlackRock, Fidelity.",partners:"Lightning Network, Strike, El Salvador (moeda legal), ETFs BlackRock/Fidelity aprovados nos EUA (2024)",market:"Considerado 'ouro digital'. Halving a cada ~4 anos impulsiona ciclos. ETFs spot aprovados nos EUA abriram floodgates institucionais. Dominância >50% historicamente bullish para o mercado geral."},
+  ETH:{desc:"Plataforma de smart contracts que possibilitou DeFi, NFTs e a infraestrutura Web3. Maior ecossistema de dApps.",founders:"Vitalik Buterin, Gavin Wood, Charles Hoskinson, Joseph Lubin e outros co-fundadores",launched:"Julho de 2015",backers:"Ethereum Foundation. Validado por milhares de stakers independentes globalmente.",partners:"Microsoft, JPMorgan, ConsenSys, Uniswap, Aave, Polygon, Arbitrum, Optimism, Base",market:"Espinha dorsal do DeFi e NFT. Após Merge para PoS (2022), tornou-se deflationary em períodos de alta atividade. L2s resolvem escalabilidade. ETF aprovado nos EUA em 2024."},
+  USDT:{desc:"Maior stablecoin do mercado, atrelada 1:1 ao dólar americano. Par de liquidez dominante em todas as exchanges.",founders:"iFinex Inc. / Tether Holdings (vinculada à Bitfinex)",launched:"Outubro de 2014",backers:"Tether Operations Limited. Reservas auditadas parcialmente — historicamente controverso.",partners:"Todas as exchanges globais, Bitfinex, Tron (maior rede de emissão), Ethereum, Solana",market:"Ferramenta essencial de liquidez cripto. Debates sobre auditoria de reservas persistem. Regulação de stablecoins pode impactar. Concorre com USDC (mais regulado)."},
+  BNB:{desc:"Token nativo do ecossistema Binance (maior exchange do mundo) e da BNB Chain. Usado para taxas, staking e acesso a serviços.",founders:"Changpeng Zhao (CZ) e Yi He — fundadores da Binance",launched:"Julho de 2017 (ICO)",backers:"Binance Holdings. Queima trimestral de tokens reduz o supply periodicamente.",partners:"PancakeSwap, Venus Protocol, BNB Chain DeFi ecosystem, Binance Launchpad",market:"Fortemente correlacionado com saúde da Binance. CZ se declarou culpado em processo EUA (2023). BNB Chain é L1 de baixo custo popular no DeFi asiático. Exchange maior do mundo por volume."},
+  USDC:{desc:"Stablecoin regulamentada emitida pela Circle. Mais transparente do mercado com auditorias mensais das reservas por firma contábil.",founders:"Circle e Coinbase via Centre Consortium (dissolvido em 2023 — agora 100% Circle)",launched:"Setembro de 2018",backers:"Circle Internet Financial. Parceiros estratégicos: BlackRock, Goldman Sachs, Fidelity.",partners:"BlackRock, Visa, Mastercard, Coinbase, Solana Foundation, Avalanche, Arbitrum",market:"Preferida por instituições por compliance e transparência. Beneficiada pelo GENIUS Act (regulação EUA). Perdeu peg brevemente em março/2023 (crise SVB) mas recuperou. Concorre com USDT em market share."},
+  XRP:{desc:"Protocolo de pagamentos e liquidação internacional da Ripple Labs. Foco em substituir SWIFT para transferências bancárias globais.",founders:"Chris Larsen e Jed McCaleb (que saiu e fundou Stellar XLM)",launched:"2012",backers:"Ripple Labs. ~40% do supply em escrow controlado pela Ripple.",partners:"Santander, SBI Holdings (Japão), American Express, mais de 300 instituições financeiras globais",market:"Processo SEC vs Ripple: decisão parcial de 2023 classificou XRP como não-security em exchanges — vitória histórica. ETF em análise. Forte adoção bancária na Ásia, especialmente Japão."},
+  SOL:{desc:"Blockchain de alta performance com ~65.000 TPS teórico e taxas mínimas (~$0.001). Principal rival do Ethereum para dApps e DeFi.",founders:"Anatoly Yakovenko e Raj Gokal — Solana Labs",launched:"Março de 2020",backers:"Solana Foundation. Investidores: Andreessen Horowitz (a16z), Multicoin Capital.",partners:"Visa (pagamentos USDC on Solana), Google Cloud, Shopify, Stripe, Jump Crypto, Helium (migrou para Solana)",market:"Recuperou fortemente após colapso FTX (2022). Ecossistema DeFi e memecoin (BONK, WIF) explodiram em 2023-24. ETF em análise. Críticas sobre centralização de validadores. Outages ocasionais de rede."},
+  DOGE:{desc:"A meme coin original, criada como piada em 2013. Tornou-se fenômeno cultural com comunidade massiva e suporte explícito de Elon Musk.",founders:"Billy Markus e Jackson Palmer (criaram como sátira do Bitcoin)",launched:"Dezembro de 2013",backers:"Sem empresa por trás. Elon Musk é o maior promotor informal. Comunidade descentralizada.",partners:"Tesla (aceitou brevemente), Twitter/X (ícone temporário do site), Dallas Mavericks (NBA), Dogecoin Foundation",market:"Movida principalmente por tweets de Elon Musk e sentimento social. Especulação sobre pagamentos no X (Twitter). Sem desenvolvimento técnico relevante. Alta volatilidade e risco especulativo elevado."},
+  TRX:{desc:"Blockchain focada em entretenimento e pagamentos digitais na Ásia. Maior rede de circulação de USDT atualmente por volume.",founders:"Justin Sun (empresário chinês polêmico, também embaixador de Grenada na ONU)",launched:"Setembro de 2017",backers:"TRON Foundation / Justin Sun. Adquiriu BitTorrent (2018) e exchange Poloniex.",partners:"BitTorrent, Samsung, Opera Browser, Binance (emissão USDT-TRC20 — a mais barata)",market:"Dominante em volume de USDT-TRC20 (mais barato que Ethereum). Justin Sun controverso (acusações SEC resolvidas com acordo). Popular na Ásia para pagamentos e streaming. Alta liquidez."},
+  ADA:{desc:"Blockchain de terceira geração com foco em pesquisa acadêmica e peer-review. Proof-of-Stake pioneiro desenvolvido metodicamente.",founders:"Charles Hoskinson (co-fundador do Ethereum, saiu e criou Cardano)",launched:"Setembro de 2017",backers:"IOHK (Input Output Hong Kong), Cardano Foundation, Emurgo",partners:"Governo da Etiópia (identidade digital para 5M estudantes), New Balance, Comdex, UNHCR",market:"Criticado por desenvolvimento lento mas meticuloso. Smart contracts lançados em 2021. DeFi ainda pequeno vs ETH/SOL. 'Cardano Army' base de holders fiel e vocal. Foco crescente em África e mercados emergentes."},
+  TON:{desc:"Blockchain criada originalmente pelo Telegram para ser infraestrutura Web3 para os 900M+ usuários do app.",founders:"Pavel e Nikolai Durov (fundadores do Telegram). Desenvolvimento atual pela TON Foundation independente.",launched:"2018 (Telegram abandonou por pressão SEC), relançado pela comunidade em 2020",backers:"TON Foundation. Integração nativa com Telegram (mini apps, carteira, pagamentos, bots).",partners:"Telegram, Tether (USDT no TON), Notcoin, Hamster Kombat, milhares de mini apps",market:"Crescimento explosivo via jogos Telegram (centenas de milhões de usuários). Pavel Durov preso na França (2024) gerou incerteza. Maior gateway para onboarding cripto em massa da história."},
+  AVAX:{desc:"Plataforma de smart contracts com arquitetura de subnets — permite criar blockchains customizadas com segurança compartilhada.",founders:"Emin Gün Sirer (professor Cornell), Kevin Sekniqi e Maofan Yin — Ava Labs",launched:"Setembro de 2020",backers:"Ava Labs. Investidores: Andreessen Horowitz, Polychain Capital, Salesforce Ventures.",partners:"Deloitte, AWS, T-Mobile, Amazon (AWS Marketplace), JPMorgan (subnets institucionais), Shopify",market:"Forte em gaming e RWA via subnets. Concorre com Ethereum e Solana. DeFi ativo (Trader Joe, Benqi). Subnets institucionais (JPMorgan Onyx) mostram caso de uso enterprise real."},
+  SHIB:{desc:"Meme coin do ecossistema Ethereum, posicionada como 'Dogecoin killer'. Evoluiu para ecossistema com DEX, metaverso e Layer 2 própria.",founders:"Anônimo conhecido como 'Ryoshi'",launched:"Agosto de 2020",backers:"Shiba Inu Ecosystem / comunidade global. Vitalik recebeu 50% do supply e doou para caridade (2021).",partners:"Shibarium (L2 própria), ShibaSwap (DEX), Shib The Metaverse, AMC Theaters (aceitou SHIB)",market:"Segunda maior meme coin por market cap. Comunidade 'SHIB Army' extremamente ativa. Burn rate via Shibarium cresce. Alta dependência de sentimento social. Expandiu além do meme com infraestrutura própria."},
+  LINK:{desc:"Rede de oráculos descentralizados que conecta smart contracts a dados do mundo real — preços, APIs, eventos externos.",founders:"Sergey Nazarov e Steve Ellis",launched:"Setembro de 2017 (ICO), mainnet 2019",backers:"Chainlink Labs. Investidores: Andreessen Horowitz, Sequoia Capital.",partners:"Google, Oracle, SWIFT (piloto), AWS, AccuWeather, AP News, praticamente todo protocolo DeFi usa Chainlink",market:"Infraestrutura crítica — quase todos os protocolos DeFi dependem de feeds Chainlink. CCIP (cross-chain interoperability) expande o produto. Considerado 'pick and shovel' do ecossistema cripto."},
+  DOT:{desc:"Protocolo de interoperabilidade que conecta múltiplas blockchains em ecossistema unificado através de parachains.",founders:"Gavin Wood (co-fundador do Ethereum e criador da linguagem Solidity) — Web3 Foundation",launched:"Maio de 2020",backers:"Web3 Foundation, Parity Technologies. Investidores: Polychain Capital.",partners:"Acala (DeFi hub), Moonbeam (EVM compatível), Astar, Parallel Finance. Ecossistema ~100 parachains.",market:"Pioneiro em interoperabilidade mas perdeu espaço para Cosmos e LayerZero. Sistema de parachain slots via leilão foi inovador. Novo protocolo JAM em desenvolvimento. Comunidade técnica sólida."},
+  BCH:{desc:"Hard fork do Bitcoin com blocos maiores (32MB vs 1MB), focado em ser 'dinheiro eletrônico' para pagamentos cotidianos.",founders:"Roger Ver ('Bitcoin Jesus') e Jihan Wu (Bitmain) lideraram o fork em 2017",launched:"Agosto de 2017 (fork do Bitcoin no bloco 478.558)",backers:"Bitcoin.com (Roger Ver), Bitmain. Sem empresa central dominante atualmente.",partners:"Bitcoin.com, BitPay, alguns comerciantes. MimbleWimble Extension Blocks adicionou privacidade.",market:"Perdeu relevância após 2017. Sofreu novo fork (BSV com Craig Wright em 2018). Comunidade diminuída. Caso Roger Ver (preso na Espanha em 2024, acusações nos EUA) impactou negativamente."},
+  SUI:{desc:"Blockchain Layer 1 de alta performance com linguagem Move. Foco em UX, gaming e NFT com paralelização de transações.",founders:"Mysten Labs: Evan Cheng, Adeniyi Abiodun, Sam Blackshear, George Danezis, Kostas Chalkias — ex-equipe Meta Diem",launched:"Maio de 2023 (mainnet)",backers:"Mysten Labs. Investidores: Andreessen Horowitz, FTX Ventures (ex), Coinbase Ventures. Levantou $300M.",partners:"Google Cloud, Alibaba Cloud, Tencent Cloud, ByteDance (jogos), Prime Machin, Bucket Protocol",market:"Crescimento rápido em DeFi e gaming. Concorre com Aptos (mesma origem Move). TPS real altíssimo. Críticas: concentração inicial de tokens em equipe/VCs. Ecossistema em expansão acelerada em 2024."},
+  NEAR:{desc:"Blockchain Layer 1 com sharding nativo, contas com nomes legíveis e UX simplificada para onboarding em massa.",founders:"Illia Polosukhin (co-autor do paper 'Attention Is All You Need' — base dos Transformers de IA) e Alexander Skidanov",launched:"Outubro de 2020",backers:"NEAR Foundation. Investidores: Andreessen Horowitz, Tiger Global, Coinbase Ventures.",partners:"Alibaba Cloud, Google Cloud, Sweat Economy, Aurora (EVM no NEAR), Octopus Network",market:"Fundador co-inventou os Transformers de IA — narrativa AI+cripto fortíssima. Aurora facilita migração de dApps Ethereum. Crescimento expressivo em LATAM (comunidade ativa no Brasil)."},
+  LTC:{desc:"Uma das primeiras altcoins. Fork do Bitcoin com blocos mais rápidos (2,5 min) e algoritmo Scrypt. Chamado de 'prata para o ouro Bitcoin'.",founders:"Charlie Lee (ex-Google, ex-CTO da Coinbase)",launched:"Outubro de 2011",backers:"Litecoin Foundation. Charlie Lee vendeu todos seus LTC em 2017 — ato controverso mas transparente.",partners:"PayPal (habilitou compra), BitPay, CoinGate. MimbleWimble Extension Blocks trouxe privacidade opcional.",market:"Considerado 'testnet' de funcionalidades para Bitcoin (SegWit e Lightning Network testados primeiro no LTC). Halving a cada ~4 anos. Relevância diminuída mas mantém alta liquidez. Historicamente forte em ciclos de bull."},
+  UNI:{desc:"Token de governança da Uniswap — maior DEX do mundo por volume. Pioneira do modelo AMM (Automated Market Maker).",founders:"Hayden Adams (ex-engenheiro mecânico, aprendeu Solidity do zero para criar a Uniswap)",launched:"Uniswap: Nov/2018. Token UNI: Setembro de 2020 (airdrop histórico de ~$1.200 para usuários)",backers:"Uniswap Labs. Investidores: Andreessen Horowitz (a16z), Paradigm, Union Square Ventures.",partners:"Todos tokens ERC-20, MetaMask, Coinbase Wallet. UniswapX e Uniswap v4 com hooks são inovações ativas.",market:"Domina mercado DEX com 40-60% do volume on-chain Ethereum. SEC enviou Wells Notice (2024) — risco regulatório. Fee switch debate na governança. V4 com hooks permite pools customizáveis."},
+  DAI:{desc:"Stablecoin descentralizada emitida pelo protocolo MakerDAO. Lastreada em cripto via CDP (Collateralized Debt Positions).",founders:"Rune Christensen (fundou MakerDAO em 2014; DAI lançado em 2017)",launched:"Dezembro de 2017",backers:"MakerDAO (DAO descentralizado). Endgame Plan reorganizou o protocolo em 2023 com novo token SKY/USDS.",partners:"Aave, Compound, Curve, Spark Protocol (nativo MakerDAO), BlackRock (BUIDL como colateral RWA)",market:"Stablecoin descentralizada mais relevante do DeFi. Diversificou para RWAs (US Treasuries via Monetalis). Migração para USDS/SKY em andamento. Menos centralizada que USDC/USDT, mais complexa e resiliente."},
+  HBAR:{desc:"Rede de ledger distribuído baseada em hashgraph (não blockchain tradicional). Foco em enterprise, sustentabilidade e alta performance.",founders:"Leemon Baird (inventor do algoritmo hashgraph) e Mance Harman — Hedera Hashgraph",launched:"Setembro de 2019",backers:"Hedera Governing Council: Google, IBM, Boeing, LG, Deutsche Telekom, Ubisoft, Standard Bank, Dell e outros.",partners:"Google, IBM, LG Electronics, ServiceNow, Tata Communications, Standard Bank, Coupon Bureau (EUA)",market:"Único projeto com conselho de grandes corporações como Google e IBM. Hashgraph é mais eficiente que PoW. Adoção enterprise crescente. Tokenização de ativos reais (RWA) emergindo com parceiros institucionais."},
+  APT:{desc:"Blockchain Layer 1 com linguagem Move, nascida das cinzas do projeto Diem do Facebook/Meta. Alta performance com segurança formal.",founders:"Mo Shaikh (CEO) e Avery Ching (CTO) — ex-equipe Meta Diem — Aptos Labs",launched:"Outubro de 2022 (mainnet)",backers:"Aptos Labs. Investidores: Andreessen Horowitz, Multicoin Capital, Binance Labs. Levantou $400M.",partners:"Microsoft (Azure), Google Cloud, Coinbase, Mastercard, SK Telecom, Alibaba Cloud, NBCUniversal",market:"Concorre com SUI (mesma origem Move). TPS real elevado. Críticas: grande alocação de tokens para equipe/VCs no lançamento. Ecossistema DeFi e gaming crescendo. Grandes parcerias corporativas dão credibilidade."},
+  ATOM:{desc:"Hub central do ecossistema Cosmos — 'Internet de blockchains'. Protocolo IBC permite comunicação nativa e soberana entre chains.",founders:"Jae Kwon e Ethan Buchman — Tendermint Inc. (agora Ignite)",launched:"Março de 2019",backers:"Interchain Foundation. Investidores: Paradigm, 1kx.",partners:"Osmosis (DEX), Celestia, dYdX (migrou para Cosmos AppChain), Injective, Kava, Cronos, BNB Chain (usa Tendermint)",market:"IBC é tecnologia genuinamente inovadora para interoperabilidade. Tokenomics controversas (alta inflação). Debate sobre captura de valor pelo ATOM vs apps do ecossistema. Jae Kwon com presença reduzida no projeto."},
+  ARB:{desc:"Maior rede Layer 2 do Ethereum por TVL. Usa Optimistic Rollups para escalar Ethereum mantendo sua segurança descentralizada.",founders:"Offchain Labs: Steven Goldfeder, Ed Felten (ex-Princeton), Harry Kalodner",launched:"Token ARB: Março de 2023 (airdrop histórico). Mainnet Arbitrum One: 2021.",backers:"Offchain Labs. Investidores: Andreessen Horowitz, Lightspeed, Pantera Capital, Google Ventures. Levantou $120M.",partners:"Uniswap, Aave, Curve, GMX (case nativo de sucesso), Camelot. Arbitrum Orbit permite criar L3s.",market:"Líder em TVL entre L2s Ethereum. GMX foi protocolo nativo de sucesso. STIP grants program distribuiu $50M para o ecossistema. Concorre com Optimism, Base e zkSync."},
+  OP:{desc:"Layer 2 do Ethereum com Optimistic Rollups. Criou o conceito de 'Superchain' — rede de L2s compartilhando infraestrutura e sequencer.",founders:"Jinglan Wang, Karl Floersch e Kevin Ho — OP Labs",launched:"Token OP: Maio de 2022. Mainnet: 2021.",backers:"OP Labs / Optimism Foundation. Investidores: Andreessen Horowitz, Paradigm, Coinbase Ventures.",partners:"Coinbase (Base usa OP Stack), Worldcoin, Synthetix, Velodrome. Base, Zora e Mode são membros da Superchain.",market:"Inovação Superchain: Base (Coinbase) usa OP Stack e divide receita com Optimism. Retroactive Public Goods Funding é modelo único. OP Stack virou padrão para criar novas L2s no ecossistema Ethereum."},
+  ONDO:{desc:"Protocolo de tokenização de ativos do mundo real (RWA) — principalmente títulos do governo americano on-chain para DeFi.",founders:"Nathan Allman (ex-Goldman Sachs) e Justin Schmidt",launched:"Token ONDO: Janeiro de 2024. Protocolo: 2021.",backers:"Ondo Finance. Investidores: Pantera Capital, Coinbase Ventures, Founders Fund, Tiger Global.",partners:"BlackRock (BUIDL fund — maior parceria cripto da BlackRock), Blackstone, Morgan Stanley, MakerDAO, Flux Finance",market:"Líder absoluto em RWA on-chain. OUSG (US treasuries tokenizados) e USDY são produtos principais. Parceria BlackRock dá credibilidade institucional enorme. Juros altos americanos tornaram treasuries tokenizados muito atraentes em 2023-24."},
+  MNT:{desc:"Token nativo da Mantle Network (L2 Ethereum) e de governança do ecossistema Mantle, nascido da comunidade BitDAO.",founders:"Nasceu da comunidade BitDAO com forte suporte da Bybit exchange",launched:"Mantle Network mainnet: Julho de 2023. Token MNT migrado de BIT (2023).",backers:"Mantle Treasury (~$4B em ativos — um dos maiores tesouros do cripto). Bybit exchange é principal parceiro.",partners:"Bybit, EigenLayer, Lido, Pendle Finance, Mantle LSP (liquid staking protocol)",market:"Tesouraria enorme dá sustentabilidade longa ao ecossistema. L2 em crescimento mas atrás de Arbitrum/Optimism em TVL. Integração Bybit gera volume real. Foco em DeFi e gaming on-chain."},
+  VET:{desc:"Blockchain focada em supply chain, rastreabilidade e gestão de negócios para grandes empresas. Caso de uso enterprise mais desenvolvido do cripto.",founders:"Sunny Lu (ex-CIO da Louis Vuitton China) e Jay Zhang",launched:"Junho de 2015 (VeChain), renomeado VeChainThor em 2018",backers:"VeChain Foundation. PricewaterhouseCoopers (PwC) apoiou estrategicamente desde o início.",partners:"Walmart China, BMW, LVMH, H&M, BYD, Kuehne+Nagel, DNV GL, Deloitte, Shanghai Gas",market:"Case enterprise mais sólido do cripto — uso real em rastreamento de alimentos (Walmart China), quilometragem de carros usados (BMW) e logística. Sistema dual-token (VET + VTHO para gas). Mais B2B que consumer."},
+  XLM:{desc:"Rede de pagamentos globais para transferências rápidas e baratas. Foco em remessas e inclusão financeira em países emergentes.",founders:"Jed McCaleb (co-fundador do Ripple/XRP, saiu e criou Stellar) e Joyce Kim",launched:"Julho de 2014",backers:"Stellar Development Foundation (SDF) — organização sem fins lucrativos.",partners:"MoneyGram, Wirex, Circle (USDC no Stellar), TEMPO, Fidor Bank. Pilots de CBDC em vários países.",market:"Foco em remessas e mercados emergentes (África, LATAM). IBM World Wire foi grande case mas foi descontinuado. MoneyGram integração ativa. Concorre diretamente com XRP/Ripple em pagamentos bancários."},
+  FIL:{desc:"Rede de armazenamento descentralizado — usuários pagam FIL para armazenar dados e provedores são recompensados por oferecer espaço de storage.",founders:"Juan Benet (também criou o protocolo IPFS) — Protocol Labs",launched:"Outubro de 2020 (após ICO histórico de $257M em 2017)",backers:"Protocol Labs. Investidores: Andreessen Horowitz, Sequoia Capital, Union Square Ventures, Winklevoss Capital.",partners:"IPFS, Internet Archive, MuckRock, USC Shoah Foundation. FVM (Filecoin Virtual Machine) trouxe DeFi.",market:"Maior rede de armazenamento descentralizado. Narrativa AI/Web3 — dados para treinar modelos de IA. FVM habilitou DeFi no Filecoin. Competição com Arweave e Storj. Preço distante do ATH mas ecossistema ativo."},
+  ICP:{desc:"Computador descentralizado da internet — combina blockchain com cloud computing para hospedar aplicações inteiras on-chain sem infraestrutura centralizada.",founders:"Dominic Williams — DFINITY Foundation",launched:"Maio de 2021 (lançou com ATH ~$750, caiu 99%+)",backers:"DFINITY Foundation. Investidores: Andreessen Horowitz, Polychain Capital, SV Angel. Levantou $270M.",partners:"DFINITY Foundation, integração Bitcoin nativa (ckBTC), integração Ethereum, ecossistema de canisters (smart contracts)",market:"Tecnologia genuinamente inovadora (canisters, reverse gas model). Lançamento controverso com FDV absurdo causou colapso massivo. Comunidade técnica ativa mas price recovery lenta. Caso real de compute descentralizado."},
+  AAVE:{desc:"Principal protocolo de empréstimo e crédito descentralizado do DeFi. Permite emprestar e tomar emprestado cripto sem intermediários.",founders:"Stani Kulechov (finlandês, fundou como ETHLend em 2017, renomeado Aave em 2020)",launched:"Token LEND (2017), migrado para AAVE (Outubro de 2020)",backers:"Aave Companies. Investidores: Framework Ventures, Coinbase Ventures.",partners:"GHO stablecoin nativa. Centrifuge e Goldfinch para RWA. Aave Arc para institucional. Portal cross-chain.",market:"Líder absoluto em DeFi lending por TVL. GHO stablecoin expandiu o ecossistema. V3 com eficiência de capital melhorada. Aave v4 em desenvolvimento. Regulação DeFi é principal risco sistêmico."},
+  CRO:{desc:"Token do ecossistema Crypto.com — exchange, cartão de débito cripto, DeFi e blockchain Cronos. Marketing agressivo e ampla presença.",founders:"Kris Marszalek, Rafael Melo, Gary Or e Bobby Bao — Crypto.com",launched:"Fevereiro de 2018 (como Monaco Token)",backers:"Foris DAX / Crypto.com. Exchange privada, capital não divulgado publicamente.",partners:"Visa (Crypto.com Card), UFC, Fórmula 1, NBA (Crypto.com Arena — ex-Staples Center LA), Matt Damon",market:"Marketing extremamente agressivo ($700M+ em patrocínios). Cronos é EVM-compatible L1 com ecossistema ativo. Usuários do cartão cripto formam base sólida. Visibilidade global massiva mas fundamentals questionados."},
+  RENDER:{desc:"Rede descentralizada de GPU para renderização 3D e computação de IA. Conecta criadores que precisam de processamento a provedores de GPU idle.",founders:"Jules Urbach (fundador da OTOY — empresa de renderização usada por Hollywood, NASA e game studios)",launched:"Token RNDR: 2020. Migração para Solana e rebrand para RENDER: 2023.",backers:"OTOY Inc. Respaldado pela empresa real OTOY com clientes reais em Hollywood.",partners:"OTOY, Solana Foundation, Apple (integração em macOS para Spatial Computing), Google Cloud, Microsoft Azure",market:"Narrativa AI+cripto fortíssima. OTOY usa rede para renderizar filmes/séries — caso de uso real. Integração Apple para Vision Pro foi catalisador. Migração para Solana aumentou performance e comunidade."},
+  GRT:{desc:"Protocolo de indexação descentralizado para blockchains — frequentemente chamado de 'Google para dados on-chain'.",founders:"Yaniv Tal, Brandon Ramirez e Jannis Pohlmann",launched:"Dezembro de 2020 (após ICO e airdrop histórico)",backers:"The Graph Foundation. Investidores: Multicoin Capital, Coinbase Ventures, Digital Currency Group.",partners:"Ethereum, Polygon, Arbitrum, Avalanche, Celo, NEAR. Praticamente todos os protocolos DeFi usam The Graph para consultas.",market:"Infraestrutura crítica do ecossistema — a maioria dos dApps depende de subgraphs para dados. Modelo similar ao Chainlink. Migração do hosted service para Graph Network descentralizado ainda em progresso."},
+  ALGO:{desc:"Blockchain Layer 1 criada por ganhador do Prêmio Turing. Pure Proof-of-Stake com finalidade em 1 segundo. Foco em TradFi e CBDC.",founders:"Silvio Micali — professor MIT, ganhou Prêmio Turing em 2012, co-inventor de zero-knowledge proofs",launched:"Junho de 2019",backers:"Algorand Foundation. Investidores: Multicoin Capital, Union Square Ventures. Apoio do governo italiano.",partners:"Itália (emitiu títulos do governo em ALGO), FIFA (colecionáveis oficiais), ClimateTrade, Circle (USDC nativo)",market:"Credencial técnica excepcional (fundador Prêmio Turing) mas mercado subavalorizou. Tokenomics com muita inflação inicial causou pressão vendedora. Adoção TradFi crescendo especialmente na Europa."},
+  STX:{desc:"Layer 2 do Bitcoin que traz smart contracts e DeFi para o Bitcoin sem alterar seu protocolo base.",founders:"Muneeb Ali e Ryan Shea — Hiro Systems (anteriormente Blockstack)",launched:"Blockstack ICO: 2017. STX 2.0: Janeiro de 2021. Nakamoto Upgrade: 2024.",backers:"Hiro Systems / Trust Machines. Primeira empresa a fazer ICO regulado pela SEC (Reg A+) nos EUA em 2019.",partners:"Hiro, Trust Machines, Bitcoin Frontier Fund, Alex Protocol (DeFi no Bitcoin), Arkadiko, Zest Protocol",market:"Único layer do Bitcoin com DeFi ativo e expressivo. Nakamoto Upgrade (2024) trouxe finalidade com Bitcoin. sBTC permite usar BTC em DeFi nativo. Narrativa Bitcoin L2 explodiu em 2024."},
+  THETA:{desc:"Rede descentralizada de streaming de vídeo e computação de edge. Permite compartilhar largura de banda e GPU para streaming e IA.",founders:"Mitch Liu e Jieyi Long — Theta Labs",launched:"Março de 2019 (mainnet)",backers:"Theta Labs. Advisors: Steve Chen (co-fundador do YouTube) e Justin Kan (co-fundador do Twitch).",partners:"Google, Samsung, Sony, Creative Artists Agency (CAA), Lionsgate, MGM, AMC Networks, World Poker Tour",market:"Advisors Steve Chen (YouTube) e Justin Kan (Twitch) conferem enorme credibilidade em streaming. Theta EdgeCloud combina streaming + GPU para IA. Uso real existente mas adoção mainstream ainda limitada."},
+  PEPE:{desc:"Meme coin baseada no meme cultural Pepe the Frog. Sem utilidade declarada, valor puramente especulativo e cultural.",founders:"Anônimo(s). Surgiu organicamente em Abril de 2023.",launched:"Abril de 2023",backers:"Sem empresa, sem fundadores identificados, sem roadmap. Completamente descentralizado.",partners:"Listado em todas as principais exchanges incluindo Binance e Coinbase. Comunidade orgânica no Twitter/X.",market:"Segunda maior meme coin por market cap. Crescimento explosivo em 2023 (1000x+). Sem fundamentos — movido 100% por sentimento e liquidez especulativa. Alta e queda foram dramáticas. Risco máximo para swing trade."},
+  ENA:{desc:"Token de governança da Ethena — protocolo que emite USDe, stablecoin sintética lastreada em posições delta-neutral em BTC/ETH via derivativos.",founders:"Guy Young (ex-fundo hedge de crédito tradicional)",launched:"USDe: Fevereiro de 2024. Token ENA: Abril de 2024.",backers:"Ethena Labs. Investidores: Dragonfly Capital, Brevan Howard Digital, Franklin Templeton, OKX Ventures, Binance Labs. Levantou $120M+.",partners:"Binance, OKX, Bybit, Deribit (posições de hedge), MakerDAO (integrou USDe como colateral)",market:"Crescimento explosivo: USDe atingiu $3B+ em meses. Yield de 20-30% APY via funding rates. Risco: funding rate negativo pode causar depeg do USDe. Modelo inovador mas testado apenas em ciclo de alta."},
+  FLOKI:{desc:"Meme coin com ecossistema expandido incluindo metaverso (Valhalla), plataforma DeFi (FlokiFi) e parceria com escola na África.",founders:"Inspirado por tweet de Elon Musk sobre seu cachorro Floki. Criado por comunidade anônima em 2021.",launched:"Junho de 2021",backers:"Floki Ecosystem / FLOKI DAO. Sem empresa central identificada.",partners:"SSC Napoli, Atlético de Madrid, Aston Villa, Spartak Moscow (patrocínios de camisa). Anúncios no metrô de Londres e Nova York.",market:"Mais desenvolvido que DOGE/SHIB com produtos reais. Marketing com patrocínios esportivos agressivo. Valhalla (metaverso/jogo) ainda em desenvolvimento. Comunidade 'Viking Army' global. Ainda predominantemente especulativo."},
+  BONK:{desc:"Primeira grande meme coin nativa do ecossistema Solana. Distribuída como airdrop de Natal para a comunidade após colapso da FTX.",founders:"Equipe anônima de desenvolvedores e artistas da comunidade Solana",launched:"Dezembro de 2022 — 'present de Natal' para a comunidade Solana após colapso FTX",backers:"BONK DAO. Sem investidores institucionais inicialmente — 100% comunidade orgânica.",partners:"Ecossistema Solana, Jupiter DEX, Birdeye, Tensor NFTs. BONKbot (bot de trading no Telegram — top 3 em uso).",market:"Ressuscitou sentimento na Solana após FTX. BONKbot é dos bots de trading mais usados do Telegram. Listagem Coinbase/Binance impulsionou massivamente. Modelo 'community-first' virou referência para meme coins."},
+  VIRTUAL:{desc:"Protocolo de tokenização e criação de agentes de IA autônomos on-chain. Permite criar, lançar e monetizar AI agents.",founders:"Equipe da Virtuals Protocol — construído na rede Base (Ethereum L2 da Coinbase)",launched:"2023. Crescimento explosivo no Q4 2024.",backers:"Framework Ventures e outros VCs. Construído na Base (Coinbase L2).",partners:"Base (Coinbase), Luna (agente de IA viral com 700k+ seguidores), AIXBT (análise cripto automatizada), dezenas de agentes AI lançados",market:"Narrativa AI+cripto mais quente do final de 2024. LUNA e AIXBT foram agentes virais. Ecossistema cresceu de $10M para $5B+ em meses. Riscos: hype pode ser insustentável, execução técnica ainda imatura."},
+  MKR:{desc:"Token de governança do MakerDAO — protocolo que controla a emissão do DAI/USDS (stablecoin descentralizada). Holders controlam parâmetros de risco.",founders:"Rune Christensen (dinamarquês, fundou em 2014 — um dos protocolos DeFi mais antigos)",launched:"Token MKR desde 2014, DAI lançado em Dezembro de 2017",backers:"MakerDAO (DAO descentralizado). Investidores: Andreessen Horowitz (comprou $15M em MKR em 2018).",partners:"Centrifuge e Monetalis (RWA), Spark Protocol (lending nativo), BlackRock (BUIDL como colateral), Aave",market:"Protocolo DeFi mais antigo e robusto. Endgame Plan reestrutura com novos tokens SKY/USDS. Lucros reais do protocolo recompram e queimam MKR — mecanismo deflationary único. RWA como colateral gera receita sustentável."},
+  JTO:{desc:"Token de governança do Jito — maior protocolo de liquid staking do Solana e otimizador de MEV (Maximal Extractable Value).",founders:"Jito Labs",launched:"Dezembro de 2023 (airdrop retroativo histórico)",backers:"Jito Labs. Investidores: Multicoin Capital, Andreessen Horowitz (a16z). Levantou $10M.",partners:"Solana Foundation, Marinade Finance, Jupiter DEX, Phantom Wallet. JitoSOL é o maior LST do Solana.",market:"JitoSOL detém 9M+ SOL em stake — dominante em liquid staking Solana. MEV bundles e tip market geram receita real e crescente. Airdrop foi muito comentado em 2023. Governança ativa do protocolo."},
+  CFG:{desc:"Protocolo pioneiro de tokenização de ativos do mundo real (RWA) — conecta faturas, imóveis e empréstimos corporativos à liquidez DeFi.",founders:"Lucas Vogelsang (CEO) e Martin Quensel — Centrifuge",launched:"Centrifuge chain: 2021 (baseada em Polkadot/Substrate)",backers:"Centrifuge. Investidores: IOSG Ventures, Rockaway Blockchain.",partners:"MakerDAO (maior parceiro — $220M+ financiado via Centrifuge), Aave (RWA market), BlockTower Capital, New Silver",market:"Pioneer absoluto em RWA on-chain. MakerDAO usa Centrifuge para colateral de ativos reais desde 2021. Crescimento do mercado RWA em 2024 beneficia o protocolo. Menor visibilidade vs ONDO mas mais antigo e battle-tested."},
+  WIF:{desc:"Meme coin do ecossistema Solana com imagem de cachorro usando gorro de lã. Uma das meme coins de maior crescimento percentual em 2023-24.",founders:"Anônimos. Surgiu organicamente na comunidade Solana.",launched:"Novembro de 2023",backers:"Sem empresa ou fundadores identificados. Completamente descentralizado.",partners:"Listado na Binance, Coinbase, OKX. Comunidade no Twitter/X e Solana ecosystem.",market:"Com BONK, liderou narrativa de meme coins Solana. Cresceu +10.000%+ em meses. Campanha crowdfunded para colocar logo do WIF na Las Vegas Sphere arrecadou $690k em 24 horas — case de marketing viral."},
+  MANTRA:{desc:"Blockchain Layer 1 regulamentada para tokenização de Real World Assets (RWA) com foco no Oriente Médio.",founders:"John Patrick Mullin, Will Corkin e Jayant Jain",launched:"2019 (como MANTRA DAO no Ethereum). Migrou para chain própria (OM) em 2024.",backers:"MANTRA. Investidores: Shorooq Partners, Forte, GameFi Ventures. Jurisdição: Dubai (VARA licensed).",partners:"DAMAC Group (gigante imobiliário Dubai — acordo de $1B em tokenização), Zand Bank (UAE), Libre Capital",market:"Crescimento explosivo em 2024 impulsionado por narrativa RWA + Oriente Médio. Parceria DAMAC ($1B) foi catalisador. Colapso de ~90% em Abril/2025 (liquidações em cascata) foi trauma severo para holders."},
+  WBT:{desc:"Token nativo da WhiteBIT — exchange de cripto europeia (Ucrânia) com crescimento em LATAM, Europa e países CIS.",founders:"Volodymyr Nosov (fundador da WhiteBIT)",launched:"2022",backers:"WhiteBIT Exchange. Empresa privada, capital não divulgado.",partners:"FC Barcelona (patrocínio de camisa — 2022-2025), Tottenham Hotspur, esportes eletrônicos internacionais",market:"WhiteBIT é uma das maiores exchanges da Europa Oriental por volume. WBT usado para desconto de taxas e staking na plataforma. Patrocínio FC Barcelona deu visibilidade global massiva. Modelo similar ao BNB/CRO para exchanges."}
+};
+
+// ── COIN POPUP ──
+function showPopup(ticker,ev){
+  const info=COIN_INFO[ticker];const coin=allCoins.find(c=>c.ticker===ticker);
+  if(!info)return;
+  const segColor=SEG_COLORS[coin?.seg]||'#8892aa';
+  const pop=document.getElementById('coin-popup');
+  pop.innerHTML=`
+    <div class="cp-header">
+      <div class="cp-icon">${ticker.slice(0,2)}</div>
+      <div><div class="cp-ticker">${ticker}</div><div class="cp-name" style="color:${segColor}">${coin?.seg||''}</div></div>
+    </div>
+    <div class="cp-section"><div class="cp-label">Descrição</div><div class="cp-val">${info.desc}</div></div>
+    <div class="cp-section"><div class="cp-label">Fundadores / Criadores</div><div class="cp-val">${info.founders}</div></div>
+    <div class="cp-section"><div class="cp-label">Lançamento</div><div class="cp-val">${info.launched}</div></div>
+    <div class="cp-section"><div class="cp-label">Quem está por trás</div><div class="cp-val">${info.backers}</div></div>
+    <div class="cp-section"><div class="cp-label">Parceiros & Ecossistema</div><div class="cp-val">${info.partners}</div></div>
+    <div class="cp-market"><div class="cp-label">O que o mercado fala</div><div class="cp-val">${info.market}</div></div>`;
+  pop.style.display='block';
+  placePopup(ev);
+}
+function hidePopup(){const p=document.getElementById('coin-popup');if(p)p.style.display='none'}
+function movePopup(ev){placePopup(ev)}
+function placePopup(ev){
+  const pop=document.getElementById('coin-popup');if(!pop||pop.style.display==='none')return;
+  const pw=pop.offsetWidth||340,ph=pop.offsetHeight||400;
+  let x=ev.clientX+16,y=ev.clientY-10;
+  if(x+pw>window.innerWidth-8)x=ev.clientX-pw-16;
+  if(y+ph>window.innerHeight-8)y=window.innerHeight-ph-8;
+  if(y<8)y=8;
+  pop.style.left=x+'px';pop.style.top=y+'px';
+}
+
+// ── TABLE HEIGHT: faz o container da tabela ocupar o espaço restante da tela ──
+function setTableHeight(){
+  const tc=document.getElementById('table-container');
+  if(!tc)return;
+  const top=tc.getBoundingClientRect().top;
+  const footer=document.querySelector('.footer');
+  const footerH=footer?footer.offsetHeight:32;
+  const h=window.innerHeight-top-footerH-2;
+  tc.style.height=Math.max(200,h)+'px';
+}
+window.addEventListener('resize',setTableHeight);
+
+// ── FORMATTERS ──
+function fmt(n,digits=2){
+  if(n===undefined||n===null)return'—';
+  if(Math.abs(n)>=1e12)return'$'+(n/1e12).toFixed(2)+'T';
+  if(Math.abs(n)>=1e9)return'$'+(n/1e9).toFixed(1)+'B';
+  if(Math.abs(n)>=1e6)return'$'+(n/1e6).toFixed(1)+'M';
+  if(Math.abs(n)>=1000)return'$'+n.toLocaleString('pt-BR',{maximumFractionDigits:0});
+  if(Math.abs(n)>=1)return'$'+n.toFixed(digits);
+  return'$'+n.toFixed(6);
+}
+function fmtPct(n){if(n===null||n===undefined)return'—';return(n>=0?'+':'')+n.toFixed(2)+'%'}
+function scoreColor(s){if(s>=65)return'#00d97e';if(s>=45)return'#f4b942';return'#ff4d6d'}
+function athColor(p){if(p==null)return'#3a4460';if(p>=-10)return'#f4b942';if(p>=-30)return'#6b7a99';return'#3a4460'}
+function timeSince(d){
+  if(!d)return'—';
+  const days=Math.floor((Date.now()-new Date(d))/864e5);
+  if(days<=0)return'hoje';if(days===1)return'1 dia';
+  if(days<30)return days+' dias';
+  const m=Math.floor(days/30);
+  return m+(m===1?' mês':' meses');
+}
+
+// ── SPARKLINE ──
+function renderSparkline(prices){
+  if(!prices||prices.length<2)return'<span style="color:var(--dim)">—</span>';
+  const pts=prices.filter((_,i)=>i%6===0);
+  const w=60,h=22,mn=Math.min(...pts),mx=Math.max(...pts),rng=mx-mn||1;
+  const poly=pts.map((p,i)=>`${(i/(pts.length-1)*w).toFixed(1)},${(h-((p-mn)/rng*h)).toFixed(1)}`).join(' ');
+  const c=pts[pts.length-1]>=pts[0]?'#00d97e':'#ff4d6d';
+  return`<svg width="60" height="22" viewBox="0 0 60 22" style="display:block"><polyline points="${poly}" fill="none" stroke="${c}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+// ── SCORE ──
+function calcAdoption(c){
+  const mc=c.market_cap||0,vol=c.total_volume||0;
+  return Math.round(Math.min(100,Math.log10(mc+1)/13*100)*0.6+Math.min(100,(mc>0?vol/mc:0)*500)*0.4);
+}
+function calcMomentum(c){
+  const d1=c.price_change_percentage_24h||0,d7=c.price_change_percentage_7d_in_currency||0,d30=c.price_change_percentage_30d_in_currency||0;
+  const n=(v,mn,mx)=>Math.max(0,Math.min(100,(v-mn)/(mx-mn)*100));
+  return Math.round(n(d1,-15,15)*0.3+n(d7,-30,30)*0.4+n(d30,-50,50)*0.3);
+}
+function calcLiquidity(c){
+  const vol=c.total_volume||0,mc=c.market_cap||0;
+  return Math.round(Math.min(100,Math.log10(vol+1)/11*100)*0.5+Math.min(100,(mc>0?vol/mc:0)*300)*0.5);
+}
+function calcScore(c){return Math.round((c.adoption||0)*0.25+(c.tech||50)*0.20+(c.liquidity||0)*0.20+(c.momentum||0)*0.20+(c.reg||50)*0.15)}
+function getSignal(s){
+  if(s>=65)return{label:'COMPRAR',cls:'sig-comprar'};
+  if(s>=50)return{label:'AGUARDAR',cls:'sig-aguardar'};
+  if(s>=35)return{label:'CAUTELA',cls:'sig-cautela'};
+  return{label:'EVITAR',cls:'sig-evitar'};
+}
+function scoreWrapHTML(sc){
+  return`<div class="score-wrap"><span class="score-num" style="color:${scoreColor(sc)}">${sc}</span><div class="score-bar-track"><div class="score-bar-fill" style="width:${sc}%;background:${scoreColor(sc)}"></div></div></div>`;
+}
+
+// ── BINANCE WS ──
+function connectBinanceWS(){
+  if(binanceWs){try{binanceWs.close()}catch(e){}}
+  clearTimeout(wsReconnectTimer);
+  const streams=Object.values(BINANCE_MAP).map(s=>s+'@miniTicker').join('/');
+  binanceWs=new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
+  binanceWs.onopen=()=>{
+    document.getElementById('ws-dot').className='ws-dot live';
+    document.getElementById('ws-label').textContent='WS live';
+  };
+  binanceWs.onmessage=(ev)=>{
+    try{
+      const msg=JSON.parse(ev.data);
+      const ticker=SYM_TO_TICKER[msg.data?.s];
+      if(!ticker)return;
+      const coin=allCoins.find(c=>c.ticker===ticker);
+      if(!coin)return;
+      const newP=parseFloat(msg.data.c),open=parseFloat(msg.data.o);
+      if(!newP||isNaN(newP))return;
+      const dir=newP>coin.current_price?'up':newP<coin.current_price?'dn':null;
+      coin.current_price=newP;
+      if(open>0){coin.price_change_percentage_24h=((newP-open)/open)*100;coin.price_change_24h=newP-open;}
+      coin.momentum=calcMomentum(coin);coin.score=calcScore(coin);
+      if(dir)updateCoinCells(ticker,coin,dir);
+      if(currentTab==='wallet')updateWalletSummary();
+    }catch(e){}
+  };
+  binanceWs.onclose=()=>{
+    document.getElementById('ws-dot').className='ws-dot';
+    document.getElementById('ws-label').textContent='WS —';
+    wsReconnectTimer=setTimeout(connectBinanceWS,5000);
+  };
+  binanceWs.onerror=()=>binanceWs.close();
+}
+
+function updateCoinCells(ticker,coin,dir){
+  const pe=document.getElementById('p-'+ticker);
+  if(pe){pe.textContent=fmt(coin.current_price);pe.classList.remove('flash-up','flash-dn');void pe.offsetWidth;pe.classList.add('flash-'+dir)}
+  const c24=document.getElementById('c24-'+ticker);
+  if(c24){const v=coin.price_change_percentage_24h||0;c24.textContent=(v>=0?'+':'')+v.toFixed(2)+'%';c24.className='chg-cell '+(v>=0?'up':'dn')}
+  const c24d=document.getElementById('c24d-'+ticker);
+  if(c24d){const v=coin.price_change_24h||0;c24d.textContent=(v>=0?'+':'')+fmt(v);c24d.className='chg-cell col-chg24d '+(v>=0?'up':'dn')}
+  const sc=document.getElementById('sc-'+ticker);
+  if(sc)sc.innerHTML=scoreWrapHTML(coin.score||0);
+  const sg=document.getElementById('sig-'+ticker);
+  if(sg){const s=getSignal(coin.score||0);sg.innerHTML=`<span class="signal-badge ${s.cls}">${s.label}</span>`}
+}
+
+// ── COUNTDOWN ──
+function startCountdown(){
+  clearInterval(countdownTimer);countdown=REFRESH_INTERVAL;
+  countdownTimer=setInterval(()=>{
+    countdown--;
+    const m=Math.floor(countdown/60),s=countdown%60,txt=m+':'+(s<10?'0':'')+s;
+    const el=document.getElementById('mb-next'),cd=document.getElementById('countdown');
+    if(el)el.textContent=txt;if(cd)cd.textContent='próx: '+txt;
+    const pf=document.getElementById('progress-fill');
+    if(pf)pf.style.width=(countdown/REFRESH_INTERVAL*100)+'%';
+    if(countdown<=0){clearInterval(countdownTimer);loadData()}
+  },1000);
+}
+
+// ── DATA LOAD ──
+async function loadData(){
+  document.getElementById('status-dot').style.background='#f4b942';
+  document.getElementById('status-txt').textContent='Atualizando...';
+  const ids=COINS_DEF.map(c=>c.id).join(',');
+  const url=`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h,7d,30d,200d,1y`;
+  try{
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    allCoins=COINS_DEF.map(def=>{
+      const live=data.find(d=>d.id===def.id)||{};
+      return{...def,...live,tech:def.tech,reg:def.reg,rank:def.rank,seg:def.seg};
+    });
+    allCoins.forEach(c=>{c.adoption=calcAdoption(c);c.liquidity=calcLiquidity(c);c.momentum=calcMomentum(c);c.score=calcScore(c)});
+    loadGlobal();
+    document.getElementById('status-dot').style.background='#00d97e';
+    document.getElementById('status-txt').textContent='Ao vivo';
+    document.getElementById('mb-time').textContent=new Date().toLocaleTimeString('pt-BR');
+    startCountdown();renderTable();populateWalletCoinSelect();
+    if(currentTab==='wallet')updateWalletSummary();
+    if(!binanceWs||binanceWs.readyState>1)connectBinanceWS();
+    setTimeout(setTableHeight,50);
+  }catch(e){
+    document.getElementById('status-dot').style.background='#ff4d6d';
+    document.getElementById('status-txt').textContent='Erro de conexão';
+    startCountdown();
+    if(!allCoins.length)useFallback();
+  }
+}
+
+async function loadGlobal(){
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/global');
+    const d=await r.json(),g=d.data;
+    document.getElementById('mb-cap').textContent=fmt(g.total_market_cap?.usd);
+    document.getElementById('mb-vol').textContent=fmt(g.total_volume?.usd);
+    document.getElementById('mb-btc').textContent=(g.market_cap_percentage?.btc||0).toFixed(1)+'%';
+    document.getElementById('mb-eth').textContent=(g.market_cap_percentage?.eth||0).toFixed(1)+'%';
+  }catch(e){}
+}
+
+function useFallback(){
+  allCoins=COINS_DEF.map(def=>({...def,
+    current_price:def.rank===1?81000:def.rank===2?2333:def.rank===7?90:10,
+    price_change_percentage_24h:(Math.random()-0.5)*8,
+    price_change_percentage_7d_in_currency:(Math.random()-0.5)*18,
+    price_change_percentage_30d_in_currency:(Math.random()-0.5)*35,
+    market_cap:def.rank===1?1.6e12:def.rank===2?2.8e11:1e9,
+    total_volume:def.rank===1?4e10:def.rank===2?1.5e10:5e8,
+  }));
+  allCoins.forEach(c=>{c.adoption=calcAdoption(c);c.liquidity=calcLiquidity(c);c.momentum=calcMomentum(c);c.score=calcScore(c)});
+  document.getElementById('mb-time').textContent='Offline';
+  renderTable();populateWalletCoinSelect();
+}
+
+// ── FILTER / SORT ──
+function filterSeg(seg,el){
+  currentFilter=seg;openDetail=null;
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderTable();
+}
+function setSort(key){
+  if(sortKey===key)sortAsc=!sortAsc;else{sortKey=key;sortAsc=key==='rank';}
+  renderTable();
+}
+
+// ── RENDER TABLE ──
+function renderTable(){
+  const q=(document.getElementById('search-input')?.value||'').toLowerCase();
+  let coins=[...allCoins];
+  if(currentFilter!=='Todos')coins=coins.filter(c=>c.seg===currentFilter);
+  if(q)coins=coins.filter(c=>c.ticker.toLowerCase().includes(q)||c.name.toLowerCase().includes(q));
+  coins.sort((a,b)=>{let av=a[sortKey]??0,bv=b[sortKey]??0;return sortAsc?av-bv:bv-av});
+  if(!coins.length){document.getElementById('table-container').innerHTML='<div class="loading-state">Nenhuma moeda encontrada.</div>';return}
+  setTimeout(setTableHeight,20);
+
+  const rows=coins.map(c=>{
+    const sig=getSignal(c.score||0);
+    const chg=c.price_change_percentage_24h||0;
+    const chg24d=c.price_change_24h||0;
+    const chg7=c.price_change_percentage_7d_in_currency||0;
+    const chg30=c.price_change_percentage_30d_in_currency||0;
+    const chg200=c.price_change_percentage_200d_in_currency;
+    const chg1y=c.price_change_percentage_1y_in_currency;
+    const sc=c.score||0;
+    const segColor=SEG_COLORS[c.seg]||'#8892aa';
+    const isOpen=openDetail===c.ticker;
+    const athPct=c.ath_change_percentage??null;
+    return`<tr onclick="toggleDetail('${c.ticker}')" class="${isOpen?'open-row':''}">
+      <td class="rank-cell">${c.rank}</td>
+      <td onmouseenter="showPopup('${c.ticker}',event)" onmouseleave="hidePopup()" onmousemove="movePopup(event)" style="cursor:default"><div class="name-cell"><div class="coin-icon">${c.ticker.slice(0,2)}</div><div><div class="coin-ticker">${c.ticker}</div><div class="coin-name-sub">${c.name}</div></div></div></td>
+      <td class="price-cell" id="p-${c.ticker}">${fmt(c.current_price)}</td>
+      <td class="chg-cell ${chg>=0?'up':'dn'}" id="c24-${c.ticker}">${chg>=0?'+':''}${chg.toFixed(2)}%</td>
+      <td class="chg-cell col-chg24d ${chg24d>=0?'up':'dn'}" id="c24d-${c.ticker}">${chg24d>=0?'+':''}${fmt(chg24d)}</td>
+      <td class="chg-cell ${chg7>=0?'up':'dn'}">${chg7>=0?'+':''}${chg7.toFixed(1)}%</td>
+      <td class="chg-cell ${chg30>=0?'up':'dn'}">${chg30>=0?'+':''}${chg30.toFixed(1)}%</td>
+      <td class="chg-cell col-200d ${chg200!=null?(chg200>=0?'up':'dn'):'pnl-neu'}">${chg200!=null?fmtPct(chg200):'—'}</td>
+      <td class="chg-cell col-1y ${chg1y!=null?(chg1y>=0?'up':'dn'):'pnl-neu'}">${chg1y!=null?fmtPct(chg1y):'—'}</td>
+      <td class="ath-cell col-ath" style="color:${athColor(athPct)}">${athPct!=null?fmtPct(athPct):'—'}</td>
+      <td class="col-spark" style="padding:6px 10px">${renderSparkline(c.sparkline_in_7d?.price)}</td>
+      <td><span class="seg-tag" style="color:${segColor};border-color:${segColor}33">${c.seg.split('/')[0].trim()}</span></td>
+      <td id="sc-${c.ticker}">${scoreWrapHTML(sc)}</td>
+      <td id="sig-${c.ticker}"><span class="signal-badge ${sig.cls}">${sig.label}</span></td>
+    </tr>${isOpen?`<tr class="detail-row"><td colspan="14"><div class="detail-inner">${buildDetail(c)}</div></td></tr>`:''}`;
+  }).join('');
+
+  document.getElementById('table-container').innerHTML=`<div class="table-wrap"><table>
+    <thead><tr>
+      <th onclick="setSort('rank')">#</th>
+      <th onclick="setSort('name')">Moeda</th>
+      <th onclick="setSort('current_price')">Preço</th>
+      <th onclick="setSort('price_change_percentage_24h')">24h%</th>
+      <th class="col-chg24d" onclick="setSort('price_change_24h')">24h$</th>
+      <th onclick="setSort('price_change_percentage_7d_in_currency')">7d</th>
+      <th onclick="setSort('price_change_percentage_30d_in_currency')">30d</th>
+      <th class="col-200d" onclick="setSort('price_change_percentage_200d_in_currency')">~6m</th>
+      <th class="col-1y" onclick="setSort('price_change_percentage_1y_in_currency')">1 ano</th>
+      <th class="col-ath" onclick="setSort('ath_change_percentage')">vs ATH</th>
+      <th class="col-spark">Spark 7d</th>
+      <th>Segmento</th>
+      <th onclick="setSort('score')">Score ▾</th>
+      <th>Sinal</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ── DETAIL ──
+function buildDetail(c){
+  const sig=getSignal(c.score||0);
+  const chg7=c.price_change_percentage_7d_in_currency||0;
+  const chg30=c.price_change_percentage_30d_in_currency||0;
+  const sc=c.score||0;
+  const pilars=[
+    {name:'Adoção',val:c.adoption||0,color:'#4d9fff',why:'Market cap e volume relativo. Alta adoção = base sólida de usuários e capital.'},
+    {name:'Tecnologia',val:c.tech||0,color:'#a78bfa',why:'Maturidade do protocolo, inovação técnica e histórico de desenvolvimento.'},
+    {name:'Liquidez',val:c.liquidity||0,color:'#f4b942',why:'Volume de negociação vs market cap. Alta liquidez facilita entrada e saída.'},
+    {name:'Momentum',val:c.momentum||0,color:'#00d97e',why:'Tendência ponderada: 24h (30%) · 7d (40%) · 30d (30%). Foco em 7d para swing trade.'},
+    {name:'Risco/Reg.',val:c.reg||0,color:'#ff6b9d',why:'Posicionamento regulatório. Score alto = menor risco de intervenção legal.'},
+  ];
+  const interp=()=>{
+    const mom=c.momentum||0,liq=c.liquidity||0;
+    if(sc>=65){let t=`Score forte de ${sc}/100. `;if(mom>=60)t+=`Momentum positivo (7d: ${chg7>=0?'+':''}${chg7.toFixed(1)}%). `;if(liq>=60)t+=`Boa liquidez. `;t+=`Zona de atenção para entrada gradual.`;return t}
+    if(sc>=50)return`Score moderado de ${sc}/100. Zona neutra — aguardar confirmação. ${mom<50?'Momentum fraco no curto prazo. ':''}Observar 1–2 semanas.`;
+    return`Score baixo de ${sc}/100. ${mom<40?'Tendência de preço negativa. ':''}Para perfil moderado: evitar novas posições. Reavaliar após reversão.`;
+  };
+  return`<div class="detail-top">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div class="coin-icon" style="width:32px;height:32px;font-size:12px">${c.ticker.slice(0,2)}</div>
+        <div><div style="font-size:16px;font-weight:500;font-family:'IBM Plex Mono',monospace">${c.ticker} <span style="font-size:12px;color:var(--muted)">${c.name}</span></div>
+        <div style="font-size:11px;color:var(--muted)">${c.seg}</div></div>
+      </div>
+      <div class="detail-meta">
+        <span>Market Cap: <strong style="color:var(--text)">${fmt(c.market_cap)}</strong></span>
+        <span>Vol 24h: <strong style="color:var(--text)">${fmt(c.total_volume)}</strong></span>
+        <span>ATH: <strong style="color:var(--text)">${fmt(c.ath)}</strong></span>
+        <span>vs ATH: <strong style="color:${athColor(c.ath_change_percentage)}">${fmtPct(c.ath_change_percentage)}</strong></span>
+        <span>7d: <strong style="color:${chg7>=0?'#00d97e':'#ff4d6d'}">${chg7>=0?'+':''}${chg7.toFixed(2)}%</strong></span>
+        <span>30d: <strong style="color:${chg30>=0?'#00d97e':'#ff4d6d'}">${chg30>=0?'+':''}${chg30.toFixed(1)}%</strong></span>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:36px;font-weight:500;font-family:'IBM Plex Mono',monospace;color:${scoreColor(sc)};line-height:1">${sc}</div>
+      <div style="font-size:10px;color:var(--muted);margin:3px 0 6px">/100</div>
+      <span class="signal-badge ${sig.cls}">${sig.label}</span>
+    </div>
+  </div>
+  <div class="detail-grid">${pilars.map(p=>`<div class="detail-pilar">
+    <div class="dp-title"><span style="width:8px;height:8px;border-radius:50%;background:${p.color};display:inline-block"></span>${p.name}</div>
+    <div class="dp-score" style="color:${scoreColor(p.val)}">${p.val}</div>
+    <div class="dp-bar" style="background:${scoreColor(p.val)};width:${p.val}%"></div>
+    <div class="dp-why">${p.why}</div>
+  </div>`).join('')}</div>
+  <div><div class="interp-label">Interpretação para swing trade</div><div class="interp-box">${interp()}</div></div>`;
+}
+
+function toggleDetail(ticker){
+  openDetail=openDetail===ticker?null:ticker;renderTable();
+  if(openDetail){setTimeout(()=>{const r=document.querySelectorAll('.detail-row');if(r.length)r[r.length-1].scrollIntoView({behavior:'smooth',block:'nearest'})},50)}
+}
+
+// ── TABS ──
+function switchTab(tab,el){
+  currentTab=tab;
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(el)el.classList.add('active');
+  if(tab==='wallet'){renderWallet();updateWalletSummary()}
+}
+
+// ── WALLET ──
+function saveWallet(){localStorage.setItem('cm-wallet',JSON.stringify(walletPositions))}
+
+function populateWalletCoinSelect(){
+  const sel=document.getElementById('wf-coin');
+  if(!sel||!allCoins.length)return;
+  const cur=sel.value;
+  sel.innerHTML=allCoins.map(c=>`<option value="${c.ticker}">${c.ticker} — ${c.name}</option>`).join('');
+  if(cur)sel.value=cur;
+  sel.onchange=prefillPrice;
+  prefillPrice();
+}
+function prefillPrice(){
+  const ticker=document.getElementById('wf-coin')?.value;
+  const pi=document.getElementById('wf-price');
+  if(!ticker||!pi)return;
+  const coin=allCoins.find(c=>c.ticker===ticker);
+  if(coin?.current_price)pi.placeholder=coin.current_price.toFixed(coin.current_price<1?6:2);
+}
+
+function addPosition(){
+  const ticker=document.getElementById('wf-coin')?.value;
+  const qty=parseFloat(document.getElementById('wf-qty')?.value);
+  const priceRaw=document.getElementById('wf-price')?.value;
+  const date=document.getElementById('wf-date')?.value;
+  const exitPrice=parseFloat(document.getElementById('wf-exit-price')?.value)||null;
+  const exitDate=document.getElementById('wf-exit-date')?.value||null;
+  const note=document.getElementById('wf-note')?.value||'';
+  if(!ticker||!qty||qty<=0){alert('Preencha moeda e quantidade.');return}
+  const coin=allCoins.find(c=>c.ticker===ticker);
+  const entryPrice=priceRaw?parseFloat(priceRaw):(coin?.current_price||0);
+  if(!entryPrice||entryPrice<=0){alert('Insira um preço de entrada válido.');return}
+  walletPositions.push({id:Date.now(),ticker,name:coin?.name||ticker,coinId:coin?.id||'',qty,entryPrice,entryDate:date||new Date().toISOString().slice(0,10),exitPrice,exitDate,note});
+  saveWallet();
+  ['wf-qty','wf-price','wf-exit-price','wf-exit-date','wf-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  renderWallet();updateWalletSummary();
+}
+
+function removePosition(id){walletPositions=walletPositions.filter(p=>p.id!==id);openCharts.delete(id);saveWallet();renderWallet();updateWalletSummary()}
+
+function getPositionPL(pos){
+  const coin=allCoins.find(c=>c.ticker===pos.ticker);
+  const cur=pos.exitPrice||coin?.current_price||pos.entryPrice;
+  const invested=pos.qty*pos.entryPrice;
+  const current=pos.qty*cur;
+  const plD=current-invested;
+  const plP=invested>0?(plD/invested)*100:0;
+  return{cur,invested,current,plD,plP,closed:!!pos.exitPrice};
+}
+
+function renderWallet(){
+  const wrap=document.getElementById('wallet-positions');
+  if(!wrap)return;
+  if(!walletPositions.length){wrap.innerHTML='<div class="wallet-empty">Nenhuma posição ainda. Adicione acima para começar.</div>';return}
+  const rows=walletPositions.map(pos=>{
+    const{cur,invested,current,plD,plP,closed}=getPositionPL(pos);
+    const plCls=plD>0?'pnl-pos':plD<0?'pnl-neg':'pnl-neu';
+    const sign=plD>=0?'+':'';
+    const chartOpen=openCharts.has(pos.id);
+    return`<tr>
+      <td><div class="name-cell"><div class="coin-icon" style="font-size:8px">${pos.ticker.slice(0,2)}</div><div><div class="coin-ticker">${pos.ticker}</div><div class="coin-name-sub">${pos.name}</div></div></div></td>
+      <td>${pos.qty.toLocaleString('pt-BR',{maximumFractionDigits:8})}</td>
+      <td>${fmt(pos.entryPrice)}</td>
+      <td id="wp-cur-${pos.id}">${fmt(cur)}</td>
+      <td>${fmt(invested)}</td>
+      <td id="wp-val-${pos.id}" class="${plCls}">${fmt(current)}</td>
+      <td id="wp-pld-${pos.id}" class="${plCls}">${sign}${fmt(plD)}</td>
+      <td id="wp-plp-${pos.id}" class="${plCls}">${sign}${plP.toFixed(2)}%</td>
+      <td>${timeSince(pos.entryDate)}</td>
+      <td>${pos.exitDate?`<span style="color:var(--muted);font-size:11px">${pos.exitDate}</span>`:'<span style="color:var(--dim);font-size:11px">—</span>'}</td>
+      <td><span class="${closed?'badge-closed':'badge-open'}">${closed?'FECHADA':'ABERTA'}</span></td>
+      <td style="color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis">${pos.note||'—'}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn-chart" onclick="toggleChart(${pos.id})" title="Gráfico de rendimento">${chartOpen?'▲':'📈'}</button>
+        <button class="btn-remove" onclick="removePosition(${pos.id})">✕</button>
+      </td>
+    </tr>${chartOpen?`<tr class="chart-row"><td colspan="13"><div class="chart-inner" id="chart-${pos.id}"><div style="text-align:center;padding:16px;color:var(--muted);font-size:12px"><span class="spin">⟳</span> Carregando histórico...</div></div></td></tr>`:''}`;
+  }).join('');
+  wrap.innerHTML=`<div class="wallet-table-wrap"><table class="wtable">
+    <thead><tr><th>Moeda</th><th>Qtd</th><th>Entrada</th><th>Atual</th><th>Investido</th><th>Valor Atual</th><th>P&amp;L $</th><th>P&amp;L %</th><th>Duração</th><th>Data Saída</th><th>Status</th><th>Nota</th><th></th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+  // load charts for open positions
+  openCharts.forEach(id=>loadPositionChart(id));
+}
+
+function toggleChart(id){
+  if(openCharts.has(id))openCharts.delete(id);else openCharts.add(id);
+  renderWallet();
+}
+
+async function loadPositionChart(posId){
+  const pos=walletPositions.find(p=>p.id===posId);
+  const el=document.getElementById('chart-'+posId);
+  if(!pos||!el)return;
+  const coinDef=COINS_DEF.find(c=>c.ticker===pos.ticker);
+  if(!coinDef){el.innerHTML='<div style="padding:16px;color:var(--muted);font-size:12px">Moeda sem histórico disponível.</div>';return}
+  const daysSince=Math.max(2,Math.ceil((Date.now()-new Date(pos.entryDate))/864e5)+1);
+  const days=Math.min(daysSince,365);
+  try{
+    const r=await fetch(`https://api.coingecko.com/api/v3/coins/${coinDef.id}/market_chart?vs_currency=usd&days=${days}`);
+    const data=await r.json();
+    const entryTs=new Date(pos.entryDate).getTime();
+    const exitTs=pos.exitDate?new Date(pos.exitDate).getTime():Date.now();
+    let pts=(data.prices||[]).filter(([ts])=>ts>=entryTs&&ts<=exitTs);
+    if(!pts.length)pts=data.prices?.slice(-7)||[];
+    const plPts=pts.map(([ts,price])=>({ts,pl:((price-pos.entryPrice)/pos.entryPrice)*100}));
+    el.innerHTML=renderPerfChart(plPts,pos);
+  }catch(e){
+    el.innerHTML='<div style="padding:16px;color:var(--muted);font-size:12px">Erro ao carregar histórico.</div>';
+  }
+}
+
+function renderPerfChart(points,pos){
+  if(!points.length)return'<div style="padding:16px;color:var(--muted);font-size:12px">Dados insuficientes.</div>';
+  const W=600,H=160,ML=46,MR=10,MT=14,MB=26,cW=W-ML-MR,cH=H-MT-MB;
+  const pls=points.map(p=>p.pl);
+  const minPL=Math.min(...pls,0),maxPL=Math.max(...pls,0),rng=maxPL-minPL||1;
+  const xS=i=>ML+(i/(points.length-1||1))*cW;
+  const yS=v=>MT+((maxPL-v)/rng)*cH;
+  const zero=yS(0);
+  const poly=points.map((p,i)=>`${xS(i).toFixed(1)},${yS(p.pl).toFixed(1)}`).join(' ');
+  const curPL=pls[pls.length-1];
+  const color=curPL>=0?'#00d97e':'#ff4d6d';
+  const fmtD=ts=>new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  const midPt=points[Math.floor(points.length/2)];
+  return`<div style="padding:12px 16px 8px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-family:'IBM Plex Mono',monospace">
+      Rendimento desde ${new Date(pos.entryDate).toLocaleDateString('pt-BR')} ·
+      Entrada: ${fmt(pos.entryPrice)} ·
+      P&amp;L atual: <span style="color:${color};font-weight:500">${curPL>=0?'+':''}${curPL.toFixed(2)}%</span>
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:150px;display:block">
+      <line x1="${ML}" y1="${MT}" x2="${ML}" y2="${MT+cH}" stroke="#1e2740" stroke-width="1"/>
+      <line x1="${ML}" y1="${MT+cH}" x2="${ML+cW}" y2="${MT+cH}" stroke="#1e2740" stroke-width="1"/>
+      <line x1="${ML}" y1="${zero.toFixed(1)}" x2="${ML+cW}" y2="${zero.toFixed(1)}" stroke="#3a4460" stroke-width="1" stroke-dasharray="4,3"/>
+      <polyline points="${poly}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${xS(points.length-1).toFixed(1)}" cy="${yS(curPL).toFixed(1)}" r="3.5" fill="${color}"/>
+      <text x="${ML-4}" y="${(MT+6).toFixed(0)}" text-anchor="end" font-size="9" fill="#6b7a99" font-family="IBM Plex Mono,monospace">${maxPL.toFixed(1)}%</text>
+      <text x="${ML-4}" y="${(zero+4).toFixed(0)}" text-anchor="end" font-size="9" fill="#3a4460" font-family="IBM Plex Mono,monospace">0%</text>
+      <text x="${ML-4}" y="${(MT+cH).toFixed(0)}" text-anchor="end" font-size="9" fill="#6b7a99" font-family="IBM Plex Mono,monospace">${minPL.toFixed(1)}%</text>
+      <text x="${ML}" y="${H-4}" font-size="9" fill="#6b7a99" font-family="IBM Plex Mono,monospace">${fmtD(points[0].ts)}</text>
+      ${midPt?`<text x="${(ML+cW/2).toFixed(0)}" y="${H-4}" text-anchor="middle" font-size="9" fill="#6b7a99" font-family="IBM Plex Mono,monospace">${fmtD(midPt.ts)}</text>`:''}
+      <text x="${(ML+cW).toFixed(0)}" y="${H-4}" text-anchor="end" font-size="9" fill="#6b7a99" font-family="IBM Plex Mono,monospace">${fmtD(points[points.length-1].ts)}</text>
+    </svg>
+  </div>`;
+}
+
+function updateWalletSummary(){
+  if(!walletPositions.length){
+    ['ws-invested','ws-current','ws-pnl-d','ws-pnl-p','ws-realized'].forEach(id=>setText(id,'$0.00','pnl-neu'));
+    setText('ws-count','0','neu');return;
+  }
+  let totalInv=0,totalCur=0,realized=0;
+  walletPositions.forEach(pos=>{
+    const{invested,current,plD,closed}=getPositionPL(pos);
+    totalInv+=invested;totalCur+=current;
+    if(closed)realized+=plD;
+    updateWalletRow(pos);
+  });
+  const plD=totalCur-totalInv,plP=totalInv>0?(plD/totalInv)*100:0;
+  const plCls=plD>0?'pnl-pos':plD<0?'pnl-neg':'pnl-neu';
+  const sign=plD>=0?'+':'';
+  setText('ws-invested',fmt(totalInv),'pnl-neu');
+  setText('ws-current',fmt(totalCur),totalCur>totalInv?'pnl-pos':totalCur<totalInv?'pnl-neg':'pnl-neu');
+  setText('ws-pnl-d',sign+fmt(plD),plCls);
+  setText('ws-pnl-p',sign+plP.toFixed(2)+'%',plCls);
+  setText('ws-realized',(realized>=0?'+':'')+fmt(realized),realized>0?'pnl-pos':realized<0?'pnl-neg':'pnl-neu');
+  setText('ws-count',walletPositions.length.toString(),'neu');
+}
+
+function updateWalletRow(pos){
+  const{cur,current,plD,plP}=getPositionPL(pos);
+  const plCls=plD>0?'pnl-pos':plD<0?'pnl-neg':'pnl-neu',sign=plD>=0?'+':'';
+  setEl('wp-cur-'+pos.id,fmt(cur),'');
+  setEl('wp-val-'+pos.id,fmt(current),plCls);
+  setEl('wp-pld-'+pos.id,sign+fmt(plD),plCls);
+  setEl('wp-plp-'+pos.id,sign+plP.toFixed(2)+'%',plCls);
+}
+
+function setText(id,val,cls){const el=document.getElementById(id);if(!el)return;el.textContent=val;el.className='sc-value '+cls}
+function setEl(id,val,cls){const el=document.getElementById(id);if(!el)return;el.textContent=val;if(cls)el.className=cls}
+
+// ── INIT ──
+document.getElementById('wf-date').valueAsDate=new Date();
+setTableHeight();
+loadData();
+</script>
+</body>
+</html>
