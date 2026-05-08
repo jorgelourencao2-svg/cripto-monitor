@@ -5,6 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cripto Monitor · Top 50</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAAbgqj8bOQB8brN_2fLM7lnLanreSF9cg",
+  authDomain: "cripto-monitor-7c0d6.firebaseapp.com",
+  databaseURL: "https://cripto-monitor-7c0d6-default-rtdb.firebaseio.com",
+  projectId: "cripto-monitor-7c0d6",
+  storageBucket: "cripto-monitor-7c0d6.firebasestorage.app",
+  messagingSenderId: "273026549270",
+  appId: "1:273026549270:web:deab9e3b4aaa406113d737",
+  measurementId: "G-6BCYKGZF81"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const walletRef = db.ref('wallet/positions');
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -399,7 +417,13 @@ let currentTab='monitor';
 let binanceWs=null;
 let wsReconnectTimer=null;
 let openCharts=new Set();
-let walletPositions=JSON.parse(localStorage.getItem('cm-wallet')||'[]');
+let walletPositions=[];
+// Firebase real-time listener – keeps walletPositions in sync across all devices
+walletRef.on('value',snap=>{
+  const data=snap.val();
+  walletPositions=data?Object.values(data):[];
+  renderWallet();updateWalletSummary();
+});
 
 // ── COIN INFO DATABASE ──
 const COIN_INFO={
@@ -813,7 +837,12 @@ function switchTab(tab,el){
 }
 
 // ── WALLET ──
-function saveWallet(){localStorage.setItem('cm-wallet',JSON.stringify(walletPositions))}
+function saveWallet(){
+  // Convert array to keyed object for Firebase (use position id as key)
+  const obj={};
+  walletPositions.forEach(p=>{obj[p.id]=p;});
+  walletRef.set(obj);
+}
 
 function populateWalletCoinSelect(){
   const sel=document.getElementById('wf-coin');
