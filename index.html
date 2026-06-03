@@ -1,0 +1,534 @@
+
+<!DOCTYPE html>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0d12;--surface:#111520;--surface2:#181e2e;--border:#1e2740;
+  --text:#e8ecf4;--muted:#6b7a99;--dim:#3a4460;
+  --green:#00d97e;--red:#ff4d6d;--yellow:#f4b942;--blue:#4d9fff;--purple:#a78bfa;
+  --score-bg:#0d1525;
+}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;padding:0}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+.header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--blue);letter-spacing:0.05em}
+.tagline{font-size:11px;color:var(--muted)}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px}
+.status-txt{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.btn-refresh{font-size:11px;padding:5px 12px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'IBM Plex Mono',monospace;border-radius:4px}
+.btn-refresh:hover{border-color:var(--blue);color:var(--blue)}
+
+.market-bar{display:flex;gap:20px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;overflow-x:auto}
+.mbar-item{display:flex;flex-direction:column;gap:2px;min-width:80px}
+.mbar-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em}
+.mbar-val{font-size:13px;font-weight:500;font-family:'IBM Plex Mono',monospace}
+.up{color:var(--green)}.dn{color:var(--red)}.neu{color:var(--yellow)}
+
+.controls{padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border);align-items:center}
+.seg-btn{font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;border-radius:3px;font-family:'IBM Plex Mono',monospace;transition:all 0.15s}
+.seg-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.seg-btn:hover:not(.active){border-color:var(--blue);color:var(--blue)}
+.search-wrap{margin-left:auto}
+#search-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 10px;font-size:12px;border-radius:3px;font-family:'IBM Plex Mono',monospace;width:140px}
+#search-input::placeholder{color:var(--dim)}
+
+.pillar-legend{padding:10px 20px;display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.pleg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.pleg-dot{width:8px;height:8px;border-radius:50%}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:700px}
+thead tr{background:var(--surface);border-bottom:1px solid var(--border)}
+th{padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);font-weight:400;text-align:left;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--blue)}
+tbody tr{border-bottom:1px solid #13182a;cursor:pointer;transition:background 0.1s}
+tbody tr:hover{background:var(--surface)}
+td{padding:9px 10px;font-size:12px;vertical-align:middle;white-space:nowrap}
+
+.rank-cell{color:var(--dim);font-family:'IBM Plex Mono',monospace;font-size:11px;width:32px}
+.name-cell{display:flex;align-items:center;gap:8px}
+.coin-icon{width:22px;height:22px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:var(--blue);flex-shrink:0}
+.coin-ticker{font-weight:500;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.coin-name{font-size:10px;color:var(--muted);margin-top:1px}
+.price-cell{font-family:'IBM Plex Mono',monospace;font-size:12px}
+.chg-cell{font-family:'IBM Plex Mono',monospace;font-size:11px}
+.seg-tag{font-size:10px;padding:2px 7px;border-radius:2px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+
+.score-wrap{display:flex;align-items:center;gap:6px}
+.score-num{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;min-width:28px;text-align:right}
+.score-bar-track{width:50px;height:4px;background:var(--dim);border-radius:2px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:2px;transition:width 0.3s}
+
+.signal-badge{font-size:10px;padding:3px 9px;border-radius:2px;font-weight:500;font-family:'IBM Plex Mono',monospace;letter-spacing:0.04em}
+.sig-comprar{background:rgba(0,217,126,0.12);color:var(--green);border:1px solid rgba(0,217,126,0.3)}
+.sig-aguardar{background:rgba(244,185,66,0.1);color:var(--yellow);border:1px solid rgba(244,185,66,0.25)}
+.sig-sair{background:rgba(255,77,109,0.1);color:var(--red);border:1px solid rgba(255,77,109,0.3)}
+.sig-neutro{background:rgba(107,122,153,0.1);color:var(--muted);border:1px solid var(--border)}
+
+/* ── Modal overlay ── */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:100;overscroll-behavior:none}
+.modal-backdrop.open{display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:640px){.modal-backdrop.open{align-items:center}}
+.detail-panel{
+  display:none;
+  width:100%;max-width:720px;
+  max-height:88vh;overflow-y:auto;
+  background:var(--surface);
+  border-radius:16px 16px 0 0;
+  padding:20px 20px 32px;
+  position:relative;
+  -webkit-overflow-scrolling:touch;
+}
+@media(min-width:640px){
+  .detail-panel{border-radius:8px;max-height:80vh;margin:16px}
+}
+.modal-backdrop.open .detail-panel{display:block}
+.modal-close{
+  position:sticky;top:0;float:right;
+  width:32px;height:32px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--muted);font-size:18px;line-height:30px;text-align:center;
+  border-radius:50%;cursor:pointer;
+  margin:-4px -4px 8px 8px;
+  z-index:10;flex-shrink:0;
+  transition:background 0.15s,color 0.15s;
+}
+.modal-close:hover{background:var(--border);color:var(--text)}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px}
+.detail-pilar{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:12px}
+.dp-title{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.dp-score{font-size:22px;font-weight:500;font-family:'IBM Plex Mono',monospace;margin-bottom:4px}
+.dp-why{font-size:11px;color:var(--muted);line-height:1.5}
+.dp-score-bar{height:3px;border-radius:2px;margin:6px 0}
+
+.footer{padding:10px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px}
+.footer-note{font-size:10px;color:var(--dim)}
+.footer-src{font-size:10px;color:var(--dim)}
+
+.loading-state{padding:60px 20px;text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px}
+.error-state{padding:40px 20px;text-align:center;color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:12px}
+
+.spin{display:inline-block;animation:spin 1s linear infinite;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<div style="min-height:500px">
+
+<div class="header">
+  <div class="header-left">
+    <div>
+      <div class="logo">◈ CRIPTO MONITOR</div>
+      <div class="tagline">Top 50 · Swing Trade · Score por pilares</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="status-txt"><span class="status-dot" id="status-dot"></span><span id="status-txt">Carregando...</span></span>
+    <button class="btn-refresh" onclick="loadData()">↻ Atualizar</button>
+  </div>
+</div>
+
+<div class="market-bar" id="market-bar">
+  <div class="mbar-item"><div class="mbar-label">Market Cap Total</div><div class="mbar-val neu" id="mb-cap">—</div></div>
+  <div class="mbar-item"><div class="mbar-label">Volume 24h</div><div class="mbar-val neu" id="mb-vol">—</div></div>
+  <div class="mbar-item"><div class="mbar-label">Dominância BTC</div><div class="mbar-val neu" id="mb-btc">—</div></div>
+  <div class="mbar-item"><div class="mbar-label">Dominância ETH</div><div class="mbar-val neu" id="mb-eth">—</div></div>
+  <div class="mbar-item"><div class="mbar-label">Moedas monit.</div><div class="mbar-val neu" id="mb-coins">50</div></div>
+</div>
+
+<div class="controls">
+  <button class="seg-btn active" onclick="filterSeg('Todos',this)">Todos</button>
+  <button class="seg-btn" onclick="filterSeg('Reserva de Valor',this)">Reserva Valor</button>
+  <button class="seg-btn" onclick="filterSeg('Smart Contract / L1',this)">Smart L1</button>
+  <button class="seg-btn" onclick="filterSeg('Stablecoin',this)">Stablecoins</button>
+  <button class="seg-btn" onclick="filterSeg('Pagamentos / Cross-border',this)">Pagamentos</button>
+  <button class="seg-btn" onclick="filterSeg('DeFi',this)">DeFi</button>
+  <button class="seg-btn" onclick="filterSeg('Layer 2 / Escalabilidade',this)">Layer 2</button>
+  <button class="seg-btn" onclick="filterSeg('RWA / Tokenização',this)">RWA</button>
+  <button class="seg-btn" onclick="filterSeg('Meme Coin',this)">Meme</button>
+  <button class="seg-btn" onclick="filterSeg('AI / Computação Web3',this)">AI/Web3</button>
+  <div class="search-wrap"><input id="search-input" placeholder="Buscar ticker..." oninput="renderTable()"></div>
+</div>
+
+<div class="pillar-legend">
+  <span class="pleg"><span class="pleg-dot" style="background:#4d9fff"></span>Adoção</span>
+  <span class="pleg"><span class="pleg-dot" style="background:#a78bfa"></span>Tecnologia</span>
+  <span class="pleg"><span class="pleg-dot" style="background:#f4b942"></span>Liquidez</span>
+  <span class="pleg"><span class="pleg-dot" style="background:#00d97e"></span>Momentum</span>
+  <span class="pleg"><span class="pleg-dot" style="background:#ff6b9d"></span>Risco/Reg.</span>
+  <span class="pleg" style="margin-left:auto;font-size:10px">Score 0–100 · Swing Trade (semanas/meses)</span>
+</div>
+
+<div id="table-container"><div class="loading-state"><span class="spin">⟳</span>Buscando dados do mercado...</div></div>
+
+<div id="modal-backdrop" class="modal-backdrop" onclick="handleBackdropClick(event)">
+  <div id="detail-panel" class="detail-panel"></div>
+</div>
+
+<div class="footer">
+  <span class="footer-note">⚠ Não é recomendação de investimento. Use como referência analítica.</span>
+  <span class="footer-src">Fonte: CoinGecko API (público) · Atualizado: <span id="last-update">—</span></span>
+</div>
+
+</div>
+
+<script>
+const COINS_DEF = [
+  {rank:1,ticker:"BTC",name:"Bitcoin",seg:"Reserva de Valor",id:"bitcoin",tech:72,reg:65},
+  {rank:2,ticker:"ETH",name:"Ethereum",seg:"Smart Contract / L1",id:"ethereum",tech:88,reg:72},
+  {rank:3,ticker:"USDT",name:"Tether",seg:"Stablecoin",id:"tether",tech:55,reg:60},
+  {rank:4,ticker:"BNB",name:"BNB",seg:"Smart Contract / L1",id:"binancecoin",tech:75,reg:55},
+  {rank:5,ticker:"USDC",name:"USD Coin",seg:"Stablecoin",id:"usd-coin",tech:58,reg:85},
+  {rank:6,ticker:"XRP",name:"XRP",seg:"Pagamentos / Cross-border",id:"ripple",tech:70,reg:65},
+  {rank:7,ticker:"SOL",name:"Solana",seg:"Smart Contract / L1",id:"solana",tech:90,reg:68},
+  {rank:8,ticker:"DOGE",name:"Dogecoin",seg:"Meme Coin",id:"dogecoin",tech:30,reg:50},
+  {rank:9,ticker:"TRX",name:"TRON",seg:"Pagamentos / Cross-border",id:"tron",tech:65,reg:45},
+  {rank:10,ticker:"ADA",name:"Cardano",seg:"Smart Contract / L1",id:"cardano",tech:78,reg:70},
+  {rank:11,ticker:"TON",name:"Toncoin",seg:"Smart Contract / L1",id:"the-open-network",tech:72,reg:55},
+  {rank:12,ticker:"AVAX",name:"Avalanche",seg:"Smart Contract / L1",id:"avalanche-2",tech:82,reg:65},
+  {rank:13,ticker:"SHIB",name:"Shiba Inu",seg:"Meme Coin",id:"shiba-inu",tech:28,reg:40},
+  {rank:14,ticker:"LINK",name:"Chainlink",seg:"Infraestrutura / Oracle",id:"chainlink",tech:85,reg:72},
+  {rank:15,ticker:"DOT",name:"Polkadot",seg:"Smart Contract / L1",id:"polkadot",tech:80,reg:68},
+  {rank:16,ticker:"BCH",name:"Bitcoin Cash",seg:"Pagamentos / Cross-border",id:"bitcoin-cash",tech:50,reg:62},
+  {rank:17,ticker:"SUI",name:"Sui",seg:"Smart Contract / L1",id:"sui",tech:86,reg:60},
+  {rank:18,ticker:"NEAR",name:"NEAR Protocol",seg:"Smart Contract / L1",id:"near",tech:83,reg:65},
+  {rank:19,ticker:"LTC",name:"Litecoin",seg:"Pagamentos / Cross-border",id:"litecoin",tech:48,reg:65},
+  {rank:20,ticker:"UNI",name:"Uniswap",seg:"DeFi",id:"uniswap",tech:82,reg:58},
+  {rank:21,ticker:"DAI",name:"Dai",seg:"Stablecoin",id:"dai",tech:75,reg:62},
+  {rank:22,ticker:"HBAR",name:"Hedera",seg:"Infraestrutura / Oracle",id:"hedera-hashgraph",tech:78,reg:80},
+  {rank:23,ticker:"APT",name:"Aptos",seg:"Smart Contract / L1",id:"aptos",tech:84,reg:62},
+  {rank:24,ticker:"ATOM",name:"Cosmos",seg:"Infraestrutura / Oracle",id:"cosmos",tech:80,reg:65},
+  {rank:25,ticker:"ARB",name:"Arbitrum",seg:"Layer 2 / Escalabilidade",id:"arbitrum",tech:85,reg:60},
+  {rank:26,ticker:"OP",name:"Optimism",seg:"Layer 2 / Escalabilidade",id:"optimism",tech:83,reg:62},
+  {rank:27,ticker:"ONDO",name:"Ondo Finance",seg:"RWA / Tokenização",id:"ondo-finance",tech:76,reg:78},
+  {rank:28,ticker:"MNT",name:"Mantle",seg:"Layer 2 / Escalabilidade",id:"mantle",tech:78,reg:58},
+  {rank:29,ticker:"VET",name:"VeChain",seg:"Infraestrutura / Oracle",id:"vechain",tech:72,reg:75},
+  {rank:30,ticker:"XLM",name:"Stellar",seg:"Pagamentos / Cross-border",id:"stellar",tech:68,reg:72},
+  {rank:31,ticker:"FIL",name:"Filecoin",seg:"AI / Computação Web3",id:"filecoin",tech:80,reg:62},
+  {rank:32,ticker:"ICP",name:"Internet Computer",seg:"AI / Computação Web3",id:"internet-computer",tech:82,reg:58},
+  {rank:33,ticker:"AAVE",name:"Aave",seg:"DeFi",id:"aave",tech:85,reg:62},
+  {rank:34,ticker:"CRO",name:"Cronos",seg:"Smart Contract / L1",id:"crypto-com-chain",tech:68,reg:72},
+  {rank:35,ticker:"RENDER",name:"Render",seg:"AI / Computação Web3",id:"render-token",tech:78,reg:60},
+  {rank:36,ticker:"GRT",name:"The Graph",seg:"Infraestrutura / Oracle",id:"the-graph",tech:80,reg:65},
+  {rank:37,ticker:"ALGO",name:"Algorand",seg:"Smart Contract / L1",id:"algorand",tech:76,reg:75},
+  {rank:38,ticker:"STX",name:"Stacks",seg:"Layer 2 / Escalabilidade",id:"blockstack",tech:75,reg:62},
+  {rank:39,ticker:"THETA",name:"Theta Network",seg:"AI / Computação Web3",id:"theta-token",tech:74,reg:62},
+  {rank:40,ticker:"PEPE",name:"Pepe",seg:"Meme Coin",id:"pepe",tech:20,reg:35},
+  {rank:41,ticker:"ENA",name:"Ethena",seg:"DeFi",id:"ethena",tech:78,reg:55},
+  {rank:42,ticker:"FLOKI",name:"Floki",seg:"Meme Coin",id:"floki",tech:25,reg:38},
+  {rank:43,ticker:"BONK",name:"Bonk",seg:"Meme Coin",id:"bonk",tech:22,reg:35},
+  {rank:44,ticker:"VIRTUAL",name:"Virtuals Protocol",seg:"AI / Computação Web3",id:"virtual-protocol",tech:72,reg:45},
+  {rank:45,ticker:"MKR",name:"Maker",seg:"DeFi",id:"maker",tech:82,reg:65},
+  {rank:46,ticker:"JTO",name:"Jito",seg:"DeFi",id:"jito-governance-token",tech:75,reg:55},
+  {rank:47,ticker:"CFG",name:"Centrifuge",seg:"RWA / Tokenização",id:"centrifuge",tech:74,reg:80},
+  {rank:48,ticker:"WIF",name:"dogwifhat",seg:"Meme Coin",id:"dogwifhat",tech:18,reg:32},
+  {rank:49,ticker:"MANTRA",name:"MANTRA",seg:"RWA / Tokenização",id:"mantra-dao",tech:72,reg:75},
+  {rank:50,ticker:"WBT",name:"WhiteBIT Coin",seg:"Infraestrutura / Oracle",id:"whitebit",tech:60,reg:55},
+];
+
+const SEG_COLORS = {
+  "Reserva de Valor":"#f4b942","Smart Contract / L1":"#4d9fff","Stablecoin":"#00d97e",
+  "Pagamentos / Cross-border":"#a78bfa","DeFi":"#ff6b9d","Layer 2 / Escalabilidade":"#06d6c7",
+  "RWA / Tokenização":"#ff8c42","Meme Coin":"#ff4d6d","AI / Computação Web3":"#9b59f0",
+  "Infraestrutura / Oracle":"#8892aa"
+};
+
+let allCoins = [];
+let currentFilter = 'Todos';
+let openDetail = null;
+let sortKey = 'score';
+let sortAsc = false;
+
+function fmt(n,digits=2){
+  if(n===undefined||n===null)return'—';
+  if(n>=1e12)return'$'+(n/1e12).toFixed(2)+'T';
+  if(n>=1e9)return'$'+(n/1e9).toFixed(1)+'B';
+  if(n>=1e6)return'$'+(n/1e6).toFixed(1)+'M';
+  if(n>=1000)return'$'+n.toLocaleString('en',{maximumFractionDigits:0});
+  return'$'+n.toFixed(digits);
+}
+
+function scoreColor(s){
+  if(s>=65)return'var(--green)';
+  if(s>=45)return'var(--yellow)';
+  return'var(--red)';
+}
+
+function calcAdoption(coin){
+  const mc=coin.market_cap||0;
+  const vol=coin.total_volume||0;
+  const mcScore=Math.min(100,Math.log10(mc+1)/13*100);
+  const volRatio=mc>0?vol/mc:0;
+  const volScore=Math.min(100,volRatio*500);
+  return Math.round(mcScore*0.6+volScore*0.4);
+}
+
+function calcMomentum(coin){
+  const d1=coin.price_change_percentage_24h||0;
+  const d7=coin.price_change_percentage_7d_in_currency||0;
+  const d30=coin.price_change_percentage_30d_in_currency||0;
+  const norm=(v,min,max)=>Math.max(0,Math.min(100,(v-min)/(max-min)*100));
+  const s1=norm(d1,-15,15);
+  const s7=norm(d7,-30,30);
+  const s30=norm(d30,-50,50);
+  return Math.round(s1*0.3+s7*0.4+s30*0.3);
+}
+
+function calcLiquidity(coin){
+  const vol=coin.total_volume||0;
+  const mc=coin.market_cap||0;
+  const ratio=mc>0?vol/mc:0;
+  const volRaw=Math.min(100,Math.log10(vol+1)/11*100);
+  const ratioScore=Math.min(100,ratio*300);
+  return Math.round(volRaw*0.5+ratioScore*0.5);
+}
+
+function calcScore(coin){
+  const adoption=calcAdoption(coin);
+  const tech=coin.tech||50;
+  const liquidity=calcLiquidity(coin);
+  const momentum=calcMomentum(coin);
+  const reg=coin.reg||50;
+  return Math.round(adoption*0.25+tech*0.20+liquidity*0.20+momentum*0.20+reg*0.15);
+}
+
+function getSignal(score){
+  if(score>=65)return{label:'COMPRAR',cls:'sig-comprar'};
+  if(score>=50)return{label:'AGUARDAR',cls:'sig-aguardar'};
+  if(score>=35)return{label:'CAUTELA',cls:'sig-neutro'};
+  return{label:'EVITAR',cls:'sig-sair'};
+}
+
+async function loadData(){
+  document.getElementById('status-dot').style.background='var(--yellow)';
+  document.getElementById('status-txt').textContent='Atualizando...';
+  document.getElementById('table-container').innerHTML='<div class="loading-state"><span class="spin">⟳</span>Buscando dados ao vivo...</div>';
+
+  const ids=COINS_DEF.map(c=>c.id).join(',');
+  const url=`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d,30d`;
+
+  try{
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+
+    allCoins=COINS_DEF.map(def=>{
+      const live=data.find(d=>d.id===def.id)||{};
+      return{...def,...live,tech:def.tech,reg:def.reg,rank:def.rank,seg:def.seg};
+    });
+    allCoins.forEach(c=>{c.adoption=calcAdoption(c);c.liquidity=calcLiquidity(c);c.momentum=calcMomentum(c);c.score=calcScore(c)});
+
+    await loadGlobal();
+
+    document.getElementById('status-dot').style.background='var(--green)';
+    document.getElementById('status-txt').textContent='Ao vivo';
+    document.getElementById('last-update').textContent=new Date().toLocaleTimeString('pt-BR');
+    renderTable();
+  }catch(e){
+    document.getElementById('status-dot').style.background='var(--red)';
+    document.getElementById('status-txt').textContent='Erro – modo offline';
+    useFallback();
+  }
+}
+
+async function loadGlobal(){
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/global');
+    const d=await r.json();
+    const g=d.data;
+    document.getElementById('mb-cap').textContent=fmt(g.total_market_cap?.usd);
+    document.getElementById('mb-vol').textContent=fmt(g.total_volume?.usd);
+    document.getElementById('mb-btc').textContent=(g.market_cap_percentage?.btc||0).toFixed(1)+'%';
+    document.getElementById('mb-eth').textContent=(g.market_cap_percentage?.eth||0).toFixed(1)+'%';
+  }catch(e){}
+}
+
+function useFallback(){
+  allCoins=COINS_DEF.map(def=>({
+    ...def,
+    current_price:def.rank===1?81000:def.rank===2?2333:def.rank===7?90:50,
+    price_change_percentage_24h:(Math.random()-0.5)*10,
+    price_change_percentage_7d_in_currency:(Math.random()-0.5)*20,
+    price_change_percentage_30d_in_currency:(Math.random()-0.5)*40,
+    market_cap:def.rank===1?1.6e12:def.rank===2?2.8e11:1e9,
+    total_volume:def.rank===1?4e10:def.rank===2?1.5e10:5e8,
+  }));
+  allCoins.forEach(c=>{c.adoption=calcAdoption(c);c.liquidity=calcLiquidity(c);c.momentum=calcMomentum(c);c.score=calcScore(c)});
+  document.getElementById('last-update').textContent='Offline';
+  renderTable();
+}
+
+function filterSeg(seg,el){
+  currentFilter=seg;
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderTable();
+}
+
+function setSort(key){
+  if(sortKey===key)sortAsc=!sortAsc;
+  else{sortKey=key;sortAsc=key==='rank';}
+  renderTable();
+}
+
+function renderTable(){
+  const q=(document.getElementById('search-input').value||'').toLowerCase();
+  let coins=[...allCoins];
+  if(currentFilter!=='Todos')coins=coins.filter(c=>c.seg===currentFilter);
+  if(q)coins=coins.filter(c=>c.ticker.toLowerCase().includes(q)||c.name.toLowerCase().includes(q));
+
+  coins.sort((a,b)=>{
+    let av=a[sortKey],bv=b[sortKey];
+    if(av===undefined)av=0;if(bv===undefined)bv=0;
+    return sortAsc?av-bv:bv-av;
+  });
+
+  if(!coins.length){
+    document.getElementById('table-container').innerHTML='<div class="loading-state">Nenhuma moeda encontrada.</div>';
+    return;
+  }
+
+  const rows=coins.map(c=>{
+    const sig=getSignal(c.score||0);
+    const chg=c.price_change_percentage_24h||0;
+    const chg7=c.price_change_percentage_7d_in_currency||0;
+    const chgCls=chg>=0?'up':'dn';
+    const chg7Cls=chg7>=0?'up':'dn';
+    const sc=c.score||0;
+    const segColor=SEG_COLORS[c.seg]||'#8892aa';
+    return`<tr onclick="showDetail('${c.ticker}')">
+      <td class="rank-cell">${c.rank}</td>
+      <td><div class="name-cell"><div class="coin-icon">${c.ticker.slice(0,2)}</div><div><div class="coin-ticker">${c.ticker}</div><div class="coin-name">${c.name}</div></div></div></td>
+      <td class="price-cell">${fmt(c.current_price)}</td>
+      <td class="chg-cell ${chgCls}">${chg>=0?'+':''}${chg.toFixed(2)}%</td>
+      <td class="chg-cell ${chg7Cls}">${chg7>=0?'+':''}${chg7.toFixed(1)}%</td>
+      <td><span class="seg-tag" style="color:${segColor};border-color:${segColor}33">${c.seg.split('/')[0].trim()}</span></td>
+      <td><div class="score-wrap"><span class="score-num" style="color:${scoreColor(sc)}">${sc}</span><div class="score-bar-track"><div class="score-bar-fill" style="width:${sc}%;background:${scoreColor(sc)}"></div></div></div></td>
+      <td><span class="signal-badge ${sig.cls}">${sig.label}</span></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('table-container').innerHTML=`<div class="table-wrap"><table>
+    <thead><tr>
+      <th onclick="setSort('rank')">#</th>
+      <th onclick="setSort('name')">Moeda</th>
+      <th onclick="setSort('current_price')">Preço</th>
+      <th onclick="setSort('price_change_percentage_24h')">24h</th>
+      <th onclick="setSort('price_change_percentage_7d_in_currency')">7d</th>
+      <th>Segmento</th>
+      <th onclick="setSort('score')">Score ▾</th>
+      <th>Sinal</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function closeDetail(){
+  document.getElementById('modal-backdrop').classList.remove('open');
+  document.body.style.overflow='';
+  openDetail=null;
+}
+
+function handleBackdropClick(e){
+  if(e.target===document.getElementById('modal-backdrop')) closeDetail();
+}
+
+function showDetail(ticker){
+  const c=allCoins.find(x=>x.ticker===ticker);
+  if(!c)return;
+  if(openDetail===ticker){closeDetail();return;}
+  openDetail=ticker;
+
+  const pilars=[
+    {name:'Adoção',val:c.adoption||0,color:'#4d9fff',why:'Baseado em market cap (tamanho do mercado) e volume relativo de negociação. Alta adoção = mais usuários e liquidez sustentável.'},
+    {name:'Tecnologia',val:c.tech||0,color:'#a78bfa',why:'Score fixo por maturidade técnica: inovação do protocolo, segurança, histórico de atualizações e atividade de desenvolvimento.'},
+    {name:'Liquidez',val:c.liquidity||0,color:'#f4b942',why:'Volume de negociação em 24h vs. market cap. Alta liquidez = fácil entrada e saída sem grande impacto no preço.'},
+    {name:'Momentum',val:c.momentum||0,color:'#00d97e',why:'Tendência de preço ponderada: variação 24h (30%), 7 dias (40%) e 30 dias (30%). Para swing trade, o 7d é o mais relevante.'},
+    {name:'Risco/Reg.',val:c.reg||0,color:'#ff6b9d',why:'Risco regulatório e posicionamento legal. Maior score = menor risco regulatório. Stablecoins reguladas e L1 maduras têm scores mais altos.'},
+  ];
+
+  const sig=getSignal(c.score||0);
+  const chg7=c.price_change_percentage_7d_in_currency||0;
+  const chg30=c.price_change_percentage_30d_in_currency||0;
+  const panel=document.getElementById('detail-panel');
+
+  panel.innerHTML=`
+  <button class="modal-close" onclick="closeDetail()" aria-label="Fechar">✕</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="coin-icon" style="width:32px;height:32px;font-size:12px">${c.ticker.slice(0,2)}</div>
+      <div>
+        <div style="font-size:16px;font-weight:500;font-family:'IBM Plex Mono',monospace">${c.ticker} <span style="font-size:12px;color:var(--muted);font-family:'IBM Plex Sans',sans-serif">${c.name}</span></div>
+        <div style="font-size:11px;color:var(--muted)">${c.seg}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="text-align:right">
+        <div style="font-size:20px;font-weight:500;font-family:'IBM Plex Mono',monospace">${fmt(c.current_price)}</div>
+        <div style="font-size:11px;color:${chg7>=0?'var(--green)':'var(--red)'}">7d: ${chg7>=0?'+':''}${chg7.toFixed(2)}% &nbsp; 30d: ${chg30>=0?'+':''}${chg30.toFixed(1)}%</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:30px;font-weight:500;font-family:'IBM Plex Mono',monospace;color:${scoreColor(c.score||0)}">${c.score||0}</div>
+        <span class="signal-badge ${sig.cls}">${sig.label}</span>
+      </div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:12px">
+    Market Cap: <span style="color:var(--text)">${fmt(c.market_cap)}</span> &nbsp;|&nbsp;
+    Vol 24h: <span style="color:var(--text)">${fmt(c.total_volume)}</span> &nbsp;|&nbsp;
+    Rank: <span style="color:var(--text)">#${c.rank}</span>
+  </div>
+  <div class="detail-grid">
+    ${pilars.map(p=>`
+    <div class="detail-pilar">
+      <div class="dp-title"><span style="width:8px;height:8px;border-radius:50%;background:${p.color};display:inline-block"></span>${p.name}</div>
+      <div class="dp-score" style="color:${scoreColor(p.val)}">${p.val}</div>
+      <div class="dp-score-bar" style="background:${scoreColor(p.val)};width:${p.val}%"></div>
+      <div class="dp-why">${p.why}</div>
+    </div>`).join('')}
+  </div>
+  <div style="margin-top:14px;padding:10px 14px;background:var(--score-bg);border-radius:4px;border:1px solid var(--border)">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:6px">Interpretação para swing trade (semanas/meses)</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.7">${interpretacao(c)}</div>
+  </div>
+  <div style="margin-top:20px;text-align:center">
+    <button onclick="closeDetail()" style="padding:10px 32px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;border-radius:4px;cursor:pointer;width:100%">✕ Fechar</button>
+  </div>`;
+
+  document.getElementById('modal-backdrop').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function interpretacao(c){
+  const sc=c.score||0;
+  const mom=c.momentum||0;
+  const liq=c.liquidity||0;
+  const chg7=c.price_change_percentage_7d_in_currency||0;
+
+  let txt='';
+  if(sc>=65){
+    txt=`Score forte de ${sc}/100. `;
+    if(mom>=60)txt+=`Momentum positivo (7d: ${chg7>=0?'+':''}${chg7.toFixed(1)}%) sugere tendência compradora. `;
+    if(liq>=60)txt+=`Boa liquidez facilita entrada e saída. `;
+    txt+=`Para swing trade: zona de atenção para entrada gradual. Confirmar com suporte de preço antes de posição maior.`;
+  }else if(sc>=50){
+    txt=`Score moderado de ${sc}/100. `;
+    txt+=`Ativo em zona neutra — aguardar confirmação de tendência. `;
+    if(mom<50)txt+=`Momentum fraco no curto prazo. Risco de queda antes de recuperação. `;
+    txt+=`Estratégia sugerida: observar por mais 1–2 semanas antes de decisão.`;
+  }else{
+    txt=`Score baixo de ${sc}/100. `;
+    txt+=`Indicadores sugerem cautela. `;
+    if(mom<40)txt+=`Tendência de preço negativa. `;
+    txt+=`Para perfil moderado: evitar novas posições agora. Reavaliar após sinais de reversão.`;
+  }
+  return txt;
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDetail(); });
+
+loadData();
+</script>
