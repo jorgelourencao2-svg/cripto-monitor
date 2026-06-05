@@ -189,6 +189,15 @@ td{padding:9px 10px;font-size:12px;vertical-align:middle;white-space:nowrap}
 }
 .modal-close-footer:hover,.modal-close-footer:active{border-color:var(--blue);color:var(--blue)}
 
+/* ── Descrição da moeda no modal ── */
+.desc-section{margin-top:18px;border-top:1px solid var(--border);padding-top:14px}
+.desc-title{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--blue);margin-bottom:10px;font-family:'IBM Plex Mono',monospace}
+.desc-block{margin-bottom:10px}
+.desc-label{font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:3px}
+.desc-val{font-size:12px;color:var(--text);line-height:1.6;word-break:break-word;white-space:normal}
+.desc-market{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 12px}
+.desc-market .desc-label{color:var(--yellow)}
+
 /* WALLET */
 .wallet-container{padding:20px}
 .wallet-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
@@ -799,7 +808,7 @@ function renderTable(){
     const athPct=c.ath_change_percentage??null;
     return`<tr onclick="toggleDetail('${c.ticker}')">
       <td class="rank-cell">${c.rank}</td>
-      <td onmouseenter="showPopup('${c.ticker}',event)" onmouseleave="hidePopup()" onmousemove="movePopup(event)" style="cursor:default"><div class="name-cell"><div class="coin-icon">${c.ticker.slice(0,2)}</div><div><div class="coin-ticker">${c.ticker}</div><div class="coin-name-sub">${c.name}</div></div></div></td>
+      <td><div class="name-cell"><div class="coin-icon">${c.ticker.slice(0,2)}</div><div><div class="coin-ticker">${c.ticker}</div><div class="coin-name-sub">${c.name}</div></div></div></td>
       <td class="price-cell" id="p-${c.ticker}">${fmt(c.current_price)}</td>
       <td class="chg-cell ${chg>=0?'up':'dn'}" id="c24-${c.ticker}">${chg>=0?'+':''}${chg.toFixed(2)}%</td>
       <td class="chg-cell col-chg24d ${chg24d>=0?'up':'dn'}" id="c24d-${c.ticker}">${chg24d>=0?'+':''}${fmt(chg24d)}</td>
@@ -883,7 +892,17 @@ function buildDetail(c){
     <div class="dp-bar" style="background:${scoreColor(p.val)};width:${p.val}%"></div>
     <div class="dp-why">${p.why}</div>
   </div>`).join('')}</div>
-  <div><div class="interp-label">Interpretação para swing trade</div><div class="interp-box">${interp()}</div></div>`;
+  <div><div class="interp-label">Interpretação para swing trade</div><div class="interp-box">${interp()}</div></div>
+  ${(()=>{const info=COIN_INFO[c.ticker];if(!info)return'';return`
+  <div class="desc-section">
+    <div class="desc-title">Sobre a moeda</div>
+    <div class="desc-block"><div class="desc-label">Descrição</div><div class="desc-val">${info.desc}</div></div>
+    <div class="desc-block"><div class="desc-label">Fundadores / Criadores</div><div class="desc-val">${info.founders}</div></div>
+    <div class="desc-block"><div class="desc-label">Lançamento</div><div class="desc-val">${info.launched}</div></div>
+    <div class="desc-block"><div class="desc-label">Quem está por trás</div><div class="desc-val">${info.backers}</div></div>
+    <div class="desc-block"><div class="desc-label">Parceiros & Ecossistema</div><div class="desc-val">${info.partners}</div></div>
+    <div class="desc-block desc-market"><div class="desc-label">O que o mercado fala</div><div class="desc-val">${info.market}</div></div>
+  </div>`})()}`;
 }
 
 function closeDetail(){
