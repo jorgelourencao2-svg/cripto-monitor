@@ -331,6 +331,7 @@ td{padding:9px 10px;font-size:12px;vertical-align:middle;white-space:nowrap}
     <span class="pleg"><span class="pleg-dot" style="background:#f4b942"></span>Liquidez</span>
     <span class="pleg"><span class="pleg-dot" style="background:#00d97e"></span>Momentum</span>
     <span class="pleg"><span class="pleg-dot" style="background:#ff6b9d"></span>Risco/Reg.</span>
+    <span class="pleg"><span class="pleg-dot" style="background:#06d6c7"></span>ATH Prox.</span>
     <span class="pleg-note">Score 0–100 · Perfil moderado · Swing trade semanas/meses</span>
   </div>
   <div id="table-container">
@@ -636,14 +637,32 @@ function calcAdoption(c){
 }
 function calcMomentum(c){
   const d1=c.price_change_percentage_24h||0,d7=c.price_change_percentage_7d_in_currency||0,d30=c.price_change_percentage_30d_in_currency||0;
+  const d1y=c.price_change_percentage_1y_in_currency;
   const n=(v,mn,mx)=>Math.max(0,Math.min(100,(v-mn)/(mx-mn)*100));
-  return Math.round(n(d1,-15,15)*0.3+n(d7,-30,30)*0.4+n(d30,-50,50)*0.3);
+  const base=n(d1,-15,15)*0.25+n(d7,-30,30)*0.45+n(d30,-50,50)*0.30;
+  if(d1y==null)return Math.round(base);
+  return Math.round(base*0.80+n(d1y,-80,200)*0.20);
+}
+function calcAthScore(c){
+  const a=c.ath_change_percentage;
+  if(a==null)return 50;
+  return Math.max(0,Math.min(100,Math.round(100+a)));
+}
+function calcDilution(c){
+  const fdv=c.fully_diluted_valuation,mc=c.market_cap;
+  if(!fdv||!mc||mc===0)return 70;
+  const r=fdv/mc;
+  if(r<=1.05)return 100;
+  return Math.max(0,Math.min(100,Math.round(100/r)));
 }
 function calcLiquidity(c){
   const vol=c.total_volume||0,mc=c.market_cap||0;
   return Math.round(Math.min(100,Math.log10(vol+1)/11*100)*0.5+Math.min(100,(mc>0?vol/mc:0)*300)*0.5);
 }
-function calcScore(c){return Math.round((c.adoption||0)*0.25+(c.tech||50)*0.20+(c.liquidity||0)*0.20+(c.momentum||0)*0.20+(c.reg||50)*0.15)}
+function calcScore(c){
+  const riskReg=Math.round((c.reg||50)*0.55+(c.dilution||70)*0.45);
+  return Math.round((c.adoption||0)*0.22+(c.tech||50)*0.17+(c.liquidity||0)*0.18+(c.momentum||0)*0.20+riskReg*0.13+(c.athScore||50)*0.10);
+}
 function getSignal(s){
   if(s>=65)return{label:'COMPRAR',cls:'sig-comprar'};
   if(s>=50)return{label:'AGUARDAR',cls:'sig-aguardar'};
@@ -676,7 +695,7 @@ function connectBinanceWS(){
       const dir=newP>coin.current_price?'up':newP<coin.current_price?'dn':null;
       coin.current_price=newP;
       if(open>0){coin.price_change_percentage_24h=((newP-open)/open)*100;coin.price_change_24h=newP-open;}
-      coin.momentum=calcMomentum(coin);coin.score=calcScore(coin);
+      coin.momentum=calcMomentum(coin);coin.athScore=calcAthScore(coin);coin.score=calcScore(coin);
       if(dir)updateCoinCells(ticker,coin,dir);
       if(currentTab==='wallet')updateWalletSummary();
     }catch(e){}
@@ -730,7 +749,7 @@ async function loadData(){
       const live=data.find(d=>d.id===def.id)||{};
       return{...def,...live,tech:def.tech,reg:def.reg,rank:def.rank,seg:def.seg};
     });
-    allCoins.forEach(c=>{c.adoption=calcAdoption(c);c.liquidity=calcLiquidity(c);c.momentum=calcMomentum(c);c.score=calcScore(c)});
+    allCoins.forEach(c=>{c.adoption=calcAdoption(c);c.liquidity=calcLiquidity(c);c.momentum=calcMomentum(c);c.athScore=calcAthScore(c);c.dilution=calcDilution(c);c.score=calcScore(c)});
     loadGlobal();
     document.getElementById('status-dot').style.background='#00d97e';
     document.getElementById('status-txt').textContent='Ao vivo';
@@ -767,7 +786,7 @@ function useFallback(){
     market_cap:def.rank===1?1.6e12:def.rank===2?2.8e11:1e9,
     total_volume:def.rank===1?4e10:def.rank===2?1.5e10:5e8,
   }));
-  allCoins.forEach(c=>{c.adoption=calcAdoption(c);c.liquidity=calcLiquidity(c);c.momentum=calcMomentum(c);c.score=calcScore(c)});
+  allCoins.forEach(c=>{c.adoption=calcAdoption(c);c.liquidity=calcLiquidity(c);c.momentum=calcMomentum(c);c.athScore=calcAthScore(c);c.dilution=calcDilution(c);c.score=calcScore(c)});
   document.getElementById('mb-time').textContent='Offline';
   renderTable();populateWalletCoinSelect();
 }
@@ -851,12 +870,14 @@ function buildDetail(c){
   const chg7=c.price_change_percentage_7d_in_currency||0;
   const chg30=c.price_change_percentage_30d_in_currency||0;
   const sc=c.score||0;
+  const riskVal=Math.round((c.reg||50)*0.55+(c.dilution||70)*0.45);
   const pilars=[
-    {name:'Adoção',val:c.adoption||0,color:'#4d9fff',why:'Market cap e volume relativo. Alta adoção = base sólida de usuários e capital.'},
-    {name:'Tecnologia',val:c.tech||0,color:'#a78bfa',why:'Maturidade do protocolo, inovação técnica e histórico de desenvolvimento.'},
-    {name:'Liquidez',val:c.liquidity||0,color:'#f4b942',why:'Volume de negociação vs market cap. Alta liquidez facilita entrada e saída.'},
-    {name:'Momentum',val:c.momentum||0,color:'#00d97e',why:'Tendência ponderada: 24h (30%) · 7d (40%) · 30d (30%). Foco em 7d para swing trade.'},
-    {name:'Risco/Reg.',val:c.reg||0,color:'#ff6b9d',why:'Posicionamento regulatório. Score alto = menor risco de intervenção legal.'},
+    {name:'Adoção',val:c.adoption||0,color:'#4d9fff',why:'Market cap e volume relativo (22%). Alta adoção = base sólida de usuários e capital.'},
+    {name:'Tecnologia',val:c.tech||0,color:'#a78bfa',why:'Maturidade do protocolo, inovação técnica e histórico de desenvolvimento (17%).'},
+    {name:'Liquidez',val:c.liquidity||0,color:'#f4b942',why:'Volume de negociação vs market cap (18%). Alta liquidez facilita entrada e saída.'},
+    {name:'Momentum',val:c.momentum||0,color:'#00d97e',why:'Tendência ponderada: 24h · 7d · 30d · 1 ano (20%). Ciclo de longo prazo agora incluído.'},
+    {name:'Risco/Reg.',val:riskVal,color:'#ff6b9d',why:'Risco regulatório (55%) + risco de diluição via FDV/Market Cap (45%). Peso total: 13%.'},
+    {name:'ATH Prox.',val:c.athScore||50,color:'#06d6c7',why:'Proximidade ao topo histórico (10%). ATH = 100, -50% do ATH = 50, -100% = 0.'},
   ];
   const interp=()=>{
     const mom=c.momentum||0,liq=c.liquidity||0;
